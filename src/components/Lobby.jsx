@@ -8,7 +8,7 @@ import '../styles/Lobby.css';
 
 const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, onToggleSpectator }) => {
 
-  const canStartGame = players.filter(p => p.status === 'playing').length >= 3;
+  const canStartGame = players.filter(p => p.status === 'playing').length >= 3 && currentPlayer?.isHost;
   const playingPlayers = players.filter(p => p.status === 'playing');
   const spectatingPlayers = players.filter(p => p.status === 'spectating');
 
@@ -119,17 +119,24 @@ const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, 
         )}
 
         <div className="lobby-actions">
-          <AnimatedButton
-            onClick={onStartGame}
-            disabled={!canStartGame}
-            variant="primary"
-            size="large"
-            className="start-game-btn"
-            delay={0.6}
-            hoverScale={1.05}
-          >
-            게임 시작
-          </AnimatedButton>
+          {currentPlayer?.isHost ? (
+            <AnimatedButton
+              onClick={onStartGame}
+              disabled={!canStartGame}
+              variant="primary"
+              size="large"
+              className="start-game-btn"
+              delay={0.6}
+              hoverScale={1.05}
+            >
+              게임 시작
+            </AnimatedButton>
+          ) : (
+            <div className="host-notice">
+              <p>호스트만 게임을 시작할 수 있습니다</p>
+              <p className="host-info">방을 만든 사람이 호스트입니다</p>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

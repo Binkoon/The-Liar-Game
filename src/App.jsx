@@ -66,6 +66,8 @@ function App() {
     setCurrentRoomCode(newRoomCode);
     updateURL(newRoomCode, false);
     navigate(`/game/${newRoomCode}`);
+    // 닉네임 입력 화면 표시
+    setShowNicknameInput(true);
   };
 
   // 방 코드로 이동
@@ -189,6 +191,13 @@ function App() {
   };
 
   const handleStartGame = () => {
+    // 호스트 권한 체크
+    if (!currentPlayer?.isHost) {
+      setErrorMessage('호스트만 게임을 시작할 수 있습니다.');
+      setShowError(true);
+      return;
+    }
+
     const playingPlayers = players.filter(p => p.status === 'playing');
     if (playingPlayers.length >= 3) {
       const sync = getRealtimeSync();
