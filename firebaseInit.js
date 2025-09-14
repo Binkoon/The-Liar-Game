@@ -20,6 +20,21 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const database = getDatabase(app);
+const database = getDatabase(app, 'https://liar-game-3bb8c-default-rtdb.asia-southeast1.firebasedatabase.app');
+
+// Firebase 연결 테스트
+console.log('Firebase 초기화 완료:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  apiKey: firebaseConfig.apiKey ? '설정됨' : '없음',
+  database: database
+});
+
+// Firebase 연결 상태 확인
+if (database) {
+  console.log('Firebase Database 연결 성공');
+} else {
+  console.error('Firebase Database 연결 실패');
+}
 
 export { database };

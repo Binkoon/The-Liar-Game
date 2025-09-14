@@ -7,7 +7,7 @@
 ![Zustand](https://img.shields.io/badge/Zustand-5.0.8-FF6B6B?style=for-the-badge&logo=zustand&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer%20Motion-12.23.12-FF0055?style=for-the-badge&logo=framer&logoColor=white)
 ![React Router](https://img.shields.io/badge/React%20Router-7.9.1-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-Hosting-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-Realtime%20DB-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 
 ## 🎯 게임 개요
@@ -16,12 +16,13 @@
 
 ## ✨ 주요 특징
 
-- 🚀 **완전 휘발성 설계** - 서버 없이 localStorage만 사용
-- 🔄 **스마트 동기화** - 3초마다 자동 + 이벤트 기반 즉시 동기화
+- 🔥 **완전 휘발성 설계** - 호스트 퇴장 시 즉시 방 삭제
+- ⚡ **실시간 동기화** - Firebase Realtime Database로 즉시 반영
 - 🎮 **URL 기반 방 관리** - 6자리 코드로 간편한 방 공유
 - 📱 **모바일 최적화** - QR코드로 쉽게 참여
 - 🎨 **글래스모피즘 UI** - 모던하고 세련된 디자인
-- ⚡ **자동 복구** - 새로고침해도 게임 상태 유지
+- 🔄 **자동 복구** - 새로고침해도 게임 상태 유지
+- 🧹 **자동 정리** - 24시간 후 자동 방 삭제
 
 ## 🎮 게임 규칙
 
@@ -74,9 +75,9 @@
 - **본인이 지목당했을 때 제시어를 정확히 맞힘**
 
 #### 👤 일반인 승리
-- **라이어를 정확히 찾아내고 제시어를 맞히지 못하게 함**
+- **라이어를 찾아야함. 그리고 그 라이어가 제시어를 맞히지 못해야함**
 
-#### 🔥 광신도 승리 (7명 이상)
+#### 🔥 광신도 승리 (6명 이상)
 - **본인이 라이어로 지목당함**
 
 ### 🎯 특별 규칙
@@ -118,12 +119,12 @@
 
 ### Backend & Hosting
 - **Firebase Hosting** - 정적 호스팅
-- **localStorage** - 클라이언트 사이드 데이터 저장
-- **URL 기반 방 관리** - 서버 없는 방 시스템
+- **Firebase Realtime Database** - 실시간 데이터 동기화
+- **Firebase Functions** - 자동 정리 시스템 (24시간 후 방 삭제)
 
 ### 개발 원칙
-- **완전 휘발성** - 서버 비용 제로 운영
-- **스마트 동기화** - 3초마다 자동 + 이벤트 기반 즉시 동기화
+- **완전 휘발성** - 호스트 퇴장 시 즉시 방 삭제
+- **실시간 동기화** - Firebase Realtime Database로 즉시 반영
 - **모바일 우선** - 반응형 디자인
 - **사용자 경험** - 직관적인 인터페이스
 
@@ -134,18 +135,20 @@
 - **6자리 방 코드**: 영숫자 조합으로 간편한 공유
 - **실시간 참여자 목록**: 누가 참여했는지 실시간 확인
 - **QR코드 공유**: 모바일에서 쉽게 참여
+- **호스트 퇴장 감지**: 호스트가 나가면 즉시 방 삭제
 
 ### 🎮 게임 시스템
 - **자동 역할 배정**: 공정한 랜덤 시스템
 - **비밀 투표**: 익명성 보장
 - **철회 시스템**: 명확한 선택 (철회/철회 안함)
 - **최후 발언**: 변호 기회 제공
+- **실시간 동기화**: 모든 플레이어에게 즉시 반영
 
 ### 🔄 세션 관리
 - **자동 복구**: 새로고침해도 게임 상태 유지
 - **새로고침 경고**: 실수로 나가는 것 방지
-- **자동 정리**: 30초 타임아웃으로 메모리 관리
-- **24시간 유효**: 저장된 데이터 자동 삭제
+- **호스트 퇴장 감지**: 호스트가 나가면 게스트들도 자동으로 홈으로 이동
+- **24시간 자동 정리**: Firebase Functions로 오래된 방 자동 삭제
 
 ### 🎨 UI/UX
 - **글래스모피즘**: 무채색 모던 디자인
@@ -174,24 +177,13 @@
 npm run build
 
 # Firebase 배포
-firebase deploy
+firebase deploy --only hosting
 ```
 
-### 환경 요구사항
-- **Node.js**: 18.0.0 이상
-- **npm**: 8.0.0 이상
-- **Firebase CLI**: 최신 버전
+## 🎯 라이브 데모
 
-## 📊 성능 최적화
+**🌐 [https://liar-game-3bb8c.web.app](https://liar-game-3bb8c.web.app)**
 
-- **Lazy Loading**: 필요시에만 컴포넌트 로드
-- **메모이제이션**: 불필요한 리렌더링 방지
-- **자동 정리**: 메모리 누수 방지
-- **압축 최적화**: 빌드 파일 최적화
-
+지금 바로 라이어게임을 시작해보세요!
 
 ---
-
-**🎮 지금 바로 라이어게임을 시작해보세요!** 
-
-*완전 무료, 서버 없이, 어디서나 즐기는 멀티플레이어 게임*

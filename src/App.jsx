@@ -14,13 +14,17 @@ import {
   generateRoomCode
 } from './utils/roomManager';
 import { initFirebaseRealtimeSync, getFirebaseRealtimeSync, cleanupFirebaseRealtimeSync } from './utils/firebaseRealtimeSync';
+import { database } from '../firebaseInit.js';
 import './App.css';
 
 // 홈 화면 컴포넌트 (방 만들기로 바로 이동)
 const HomePage = () => {
   const navigate = useNavigate();
   
+  console.log('HomePage 컴포넌트 렌더링');
+  
   useEffect(() => {
+    console.log('HomePage useEffect 실행 - /create-room으로 이동');
     // 최초 접속 시 바로 방 만들기 화면으로 이동
     navigate('/create-room', { replace: true });
   }, [navigate]);
@@ -89,12 +93,20 @@ const GameRoom = () => {
 
 
   // 새로고침 경고 처리
-  const handleBeforeUnload = (e) => {
+  const handleBeforeUnload = async (e) => {
     if (gameStarted) {
       e.preventDefault();
       e.returnValue = '';
       setShowRefreshWarning(true);
       return '';
+    }
+    
+    // 호스트가 나가면 방 즉시 삭제
+    if (currentPlayer?.isHost) {
+      const sync = getFirebaseRealtimeSync();
+      if (sync) {
+        await sync.deleteRoom();
+      }
     }
   };
 
@@ -109,14 +121,33 @@ const GameRoom = () => {
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    if (!roomCode) return;
+    if (!roomCode) {
+      console.log('roomCode가 없습니다:', roomCode);
+      return;
+    }
     
-    try {
-      // Firebase 실시간 동기화 초기화
+  console.log('GameRoom 초기화 시작:', { roomCode, action });
+  
+  try {
+    // Firebase Database 연결 확인
+    console.log('Firebase Database 상태:', database);
+    
+    if (!database) {
+      throw new Error('Firebase Database가 초기화되지 않았습니다');
+    }
+    
+    // Firebase 실시간 동기화 초기화
+    console.log('Firebase 동기화 초기화 시도...');
+      
       const sync = initFirebaseRealtimeSync(roomCode);
+      
+      if (!sync) {
+        throw new Error('Firebase 동기화 인스턴스 생성 실패');
+      }
       
       // 전역으로 사용할 수 있도록 설정
       window.realtimeSync = sync;
+      console.log('Firebase 동기화 인스턴스 생성됨:', sync);
     
     // 동기화 리스너 등록
     sync.addListener(async (event, data) => {
@@ -132,35 +163,60 @@ const GameRoom = () => {
           setGameStarted(true);
         }
       }
+      
+      // 방 삭제 이벤트 처리 (호스트 퇴장)
+      if (event === 'roomDeleted') {
+        console.log('호스트가 나가서 방이 삭제되었습니다');
+        setGameStarted(false);
+        setCurrentPlayer(null);
+        setPlayers([]);
+        navigate('/');
+      }
     });
     
     // 기존 플레이어들 로드
+    console.log('기존 플레이어들 로드 시도...');
     sync.getAllPlayers().then(allPlayers => {
+      console.log('기존 플레이어들 로드됨:', allPlayers);
       setPlayers(allPlayers);
+    }).catch(error => {
+      console.error('플레이어 로드 실패:', error);
     });
     
+    console.log('게임 상태 로드 시도...');
     sync.getGameState().then(gameState => {
+      console.log('게임 상태 로드됨:', gameState);
       if (gameState) {
         setGameStarted(gameState.gameStarted || false);
       }
+    }).catch(error => {
+      console.error('게임 상태 로드 실패:', error);
     });
     
     // location state에서 닉네임이 있으면 바로 참여
     if (location.state?.nickname) {
+      console.log('location.state에서 닉네임 발견:', location.state.nickname);
       const nickname = location.state.nickname;
       const newPlayer = {
         name: nickname,
         isHost: action === 'create'
       };
-      sync.registerPlayer(newPlayer).then(() => {
-        setCurrentPlayer(newPlayer);
+      console.log('플레이어 등록 시도:', newPlayer);
+      sync.registerPlayer(newPlayer).then((registeredPlayer) => {
+        console.log('플레이어 등록 성공:', registeredPlayer);
+        console.log('등록된 플레이어의 isHost:', registeredPlayer.isHost);
+        setCurrentPlayer(registeredPlayer);
         setShowNicknameInput(false);
+      }).catch(error => {
+        console.error('플레이어 등록 실패:', error);
       });
     } else {
       // 닉네임이 없으면 닉네임 입력 화면 표시
+      console.log('닉네임이 없어서 닉네임 입력 화면 표시');
       setShowNicknameInput(true);
     }
 
+    console.log('로딩 완료');
     setIsLoading(false);
 
     // beforeunload 이벤트 리스너 등록
@@ -195,8 +251,10 @@ const GameRoom = () => {
         isHost: action === 'create' // 방 만들기인 경우 호스트
       };
       
-      await sync.registerPlayer(newPlayer);
-      setCurrentPlayer(newPlayer);
+      console.log('handleJoinWithNickname - 플레이어 등록 시도:', newPlayer);
+      const registeredPlayer = await sync.registerPlayer(newPlayer);
+      console.log('handleJoinWithNickname - 플레이어 등록 성공:', registeredPlayer);
+      setCurrentPlayer(registeredPlayer);
       setShowNicknameInput(false);
       setErrorMessage('');
     } catch (error) {
@@ -252,10 +310,15 @@ const GameRoom = () => {
     setGameStarted(false);
   };
 
-  const handleEndGame = () => {
+  const handleEndGame = async () => {
     const sync = getFirebaseRealtimeSync();
     if (sync) {
-      sync.cleanup();
+      // 호스트가 게임을 종료하면 방 즉시 삭제
+      if (currentPlayer?.isHost) {
+        await sync.deleteRoom();
+      } else {
+        sync.cleanup();
+      }
     }
     setGameStarted(false);
     setPlayers([]);
@@ -457,6 +520,8 @@ const LegacyRedirect = () => {
 
 // 메인 App 컴포넌트
 function App() {
+  console.log('App 컴포넌트 렌더링');
+  
   return (
     <div className="app">
       <Routes>

@@ -8,9 +8,22 @@ import '../styles/Lobby.css';
 
 const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, onToggleSpectator }) => {
 
+  console.log('Lobby 컴포넌트 렌더링:', {
+    players: players,
+    currentPlayer: currentPlayer,
+    currentPlayerIsHost: currentPlayer?.isHost,
+    playingCount: players.filter(p => p.status === 'playing').length
+  });
+
   const canStartGame = players.filter(p => p.status === 'playing').length >= 3 && currentPlayer?.isHost;
   const playingPlayers = players.filter(p => p.status === 'playing');
   const spectatingPlayers = players.filter(p => p.status === 'spectating');
+
+  console.log('게임 시작 가능 여부:', {
+    canStartGame: canStartGame,
+    playingCount: playingPlayers.length,
+    isHost: currentPlayer?.isHost
+  });
 
   return (
     <motion.div 

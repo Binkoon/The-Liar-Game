@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 
+console.log('main.jsx 시작됨');
+
 // 로딩 컴포넌트
 const LoadingFallback = () => (
   <div style={{
@@ -18,6 +20,8 @@ const LoadingFallback = () => (
   </div>
 )
 
+console.log('React 앱 렌더링 시작');
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
@@ -27,3 +31,5 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+console.log('React 앱 렌더링 완료');
