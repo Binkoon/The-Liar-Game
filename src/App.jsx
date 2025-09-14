@@ -1,8 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Routes, Route } from 'react-router-dom';
 
 // 컴포넌트들을 lazy loading으로 import
+const Home = lazy(() => import('./components/Home'));
 const Lobby = lazy(() => import('./components/Lobby'));
 const Game = lazy(() => import('./components/Game'));
 const NicknameInput = lazy(() => import('./components/NicknameInput'));
@@ -15,20 +16,46 @@ import {
   saveGameState, 
   loadGameState, 
   clearGameState,
-  updateURL,
-  setupPopstateHandler,
   cleanupOldGameStates
 } from './utils/roomManager';
 import { initRealtimeSync, getRealtimeSync, cleanupRealtimeSync } from './utils/realtimeSync';
 import './App.css';
 
-function App() {
+// 홈 화면 컴포넌트
+const HomePage = () => {
   const navigate = useNavigate();
-  const { roomCode } = useParams();
+  
+  const handleCreateRoom = () => {
+    const newRoomCode = generateRoomCode();
+    navigate(`/room/${newRoomCode}/create`);
+  };
+  
+  const handleJoinRoom = (roomCode) => {
+    navigate(`/room/${roomCode}/join`);
+  };
+  
+  return (
+    <Suspense fallback={
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>화면을 준비하는 중...</p>
+      </div>
+    }>
+      <Home 
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
+      />
+    </Suspense>
+  );
+};
+
+// 게임 방 컴포넌트
+const GameRoom = () => {
+  const navigate = useNavigate();
+  const { roomCode, action } = useParams();
   
   const [players, setPlayers] = useState([]);
   const [gameStarted, setGameStarted] = useState(false);
-  const [currentRoomCode, setCurrentRoomCode] = useState(null);
   const [showRefreshWarning, setShowRefreshWarning] = useState(false);
   const [showRoomShare, setShowRoomShare] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,13 +66,13 @@ function App() {
 
   // 게임 상태 저장
   const saveCurrentGameState = () => {
-    if (currentRoomCode && gameStarted) {
+    if (roomCode && gameStarted) {
       const gameState = {
         players,
         gameStarted,
         timestamp: Date.now()
       };
-      saveGameState(currentRoomCode, gameState);
+      saveGameState(roomCode, gameState);
     }
   };
 
@@ -60,23 +87,6 @@ function App() {
     return false;
   };
 
-  // 방 코드 생성 및 URL 업데이트
-  const createNewRoom = () => {
-    const newRoomCode = generateRoomCode();
-    setCurrentRoomCode(newRoomCode);
-    updateURL(newRoomCode, false);
-    navigate(`/game/${newRoomCode}`);
-    // 닉네임 입력 화면 표시
-    setShowNicknameInput(true);
-  };
-
-  // 방 코드로 이동
-  const joinRoom = (roomCode) => {
-    setCurrentRoomCode(roomCode);
-    updateURL(roomCode, false);
-    navigate(`/game/${roomCode}`);
-  };
-
   // 새로고침 경고 처리
   const handleBeforeUnload = (e) => {
     if (gameStarted) {
@@ -89,7 +99,6 @@ function App() {
 
   const handleRefreshConfirm = () => {
     setShowRefreshWarning(false);
-    // 실제로는 페이지가 새로고침됨
     window.location.reload();
   };
 
@@ -99,45 +108,38 @@ function App() {
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
+    if (!roomCode) return;
+    
     // 오래된 게임 상태 정리
     cleanupOldGameStates();
-
-    // URL에서 방 코드 확인
-    const urlRoomCode = getRoomCodeFromURL();
     
-    if (urlRoomCode) {
-      // URL에 방 코드가 있으면 해당 방으로 이동
-      setCurrentRoomCode(urlRoomCode);
-      
-      // 실시간 동기화 초기화
-      const sync = initRealtimeSync(urlRoomCode);
-      
-      // 동기화 리스너 등록
-      sync.addListener((event, data) => {
-        if (event === 'sync') {
-          const allPlayers = Object.values(data.players || {});
-          setPlayers(allPlayers);
-          
-          if (data.gameState) {
-            setGameStarted(data.gameState.gameStarted || false);
-          }
+    // 실시간 동기화 초기화
+    const sync = initRealtimeSync(roomCode);
+    
+    // 동기화 리스너 등록
+    sync.addListener((event, data) => {
+      if (event === 'sync') {
+        const allPlayers = Object.values(data.players || {});
+        setPlayers(allPlayers);
+        
+        if (data.gameState) {
+          setGameStarted(data.gameState.gameStarted || false);
         }
-      });
-      
-      // 기존 플레이어들 로드
-      const allPlayers = sync.getAllPlayers();
-      setPlayers(allPlayers);
-      
-      const gameState = sync.getGameState();
-      if (gameState) {
-        setGameStarted(gameState.gameStarted || false);
       }
-      
-      // 닉네임 입력 화면 표시
+    });
+    
+    // 기존 플레이어들 로드
+    const allPlayers = sync.getAllPlayers();
+    setPlayers(allPlayers);
+    
+    const gameState = sync.getGameState();
+    if (gameState) {
+      setGameStarted(gameState.gameStarted || false);
+    }
+    
+    // 액션에 따라 닉네임 입력 화면 표시 여부 결정
+    if (action === 'create' || action === 'join') {
       setShowNicknameInput(true);
-    } else {
-      // URL에 방 코드가 없으면 새 방 생성
-      createNewRoom();
     }
 
     setIsLoading(false);
@@ -150,14 +152,14 @@ function App() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       cleanupRealtimeSync();
     };
-  }, []);
+  }, [roomCode, action]);
 
   // 게임 상태 변경 시 저장
   useEffect(() => {
-    if (currentRoomCode && !isLoading) {
+    if (roomCode && !isLoading) {
       saveCurrentGameState();
     }
-  }, [players, gameStarted, currentRoomCode, isLoading]);
+  }, [players, gameStarted, roomCode, isLoading]);
 
   // 닉네임으로 방 참여
   const handleJoinWithNickname = (nickname) => {
@@ -165,7 +167,7 @@ function App() {
     if (sync) {
       const newPlayer = {
         name: nickname,
-        isHost: sync.isHost
+        isHost: action === 'create' // 방 만들기인 경우 호스트
       };
       sync.addPlayer(newPlayer);
       setCurrentPlayer(newPlayer);
@@ -178,7 +180,6 @@ function App() {
     if (sync) {
       sync.removePlayer(playerId);
     } else {
-      // 폴백: 기존 방식
       setPlayers(prev => prev.filter(p => p.id !== playerId));
     }
   };
@@ -191,7 +192,6 @@ function App() {
   };
 
   const handleStartGame = () => {
-    // 호스트 권한 체크
     if (!currentPlayer?.isHost) {
       setErrorMessage('호스트만 게임을 시작할 수 있습니다.');
       setShowError(true);
@@ -213,18 +213,14 @@ function App() {
 
   const handleBackToLobby = () => {
     setGameStarted(false);
-    setPlayers([]);
-    // 게임 상태는 유지 (방은 그대로)
   };
 
   const handleEndGame = () => {
-    // 게임 종료 시 저장된 상태 삭제
-    if (currentRoomCode) {
-      clearGameState(currentRoomCode);
+    if (roomCode) {
+      clearGameState(roomCode);
     }
     setGameStarted(false);
     setPlayers([]);
-    setCurrentRoomCode(null);
     navigate('/');
   };
 
@@ -242,11 +238,11 @@ function App() {
   return (
     <div className="app">
       {/* 방 정보 헤더 */}
-      {currentRoomCode && (
+      {roomCode && (
         <div className="room-header">
           <div className="room-info">
             <span className="room-label">방 코드:</span>
-            <span className="room-code">{currentRoomCode}</span>
+            <span className="room-code">{roomCode}</span>
           </div>
           <div className="room-actions">
             <button 
@@ -285,8 +281,8 @@ function App() {
             }>
               <NicknameInput
                 onJoin={handleJoinWithNickname}
-                roomCode={currentRoomCode}
-                isHost={players.length === 0}
+                roomCode={roomCode}
+                isHost={action === 'create'}
               />
             </Suspense>
           </motion.div>
@@ -308,7 +304,7 @@ function App() {
                 players={players}
                 onRemovePlayer={handleRemovePlayer}
                 onStartGame={handleStartGame}
-                roomCode={currentRoomCode}
+                roomCode={roomCode}
                 currentPlayer={currentPlayer}
                 onToggleSpectator={handleToggleSpectator}
               />
@@ -360,7 +356,7 @@ function App() {
       {/* 방 공유 모달 */}
       <Suspense fallback={null}>
         <RoomShare
-          roomCode={currentRoomCode}
+          roomCode={roomCode}
           isOpen={showRoomShare}
           onClose={() => setShowRoomShare(false)}
         />
@@ -400,6 +396,42 @@ function App() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+};
+
+// 기존 URL 리다이렉트 컴포넌트
+const LegacyRedirect = () => {
+  const { roomCode } = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // 기존 /game/roomCode 형태를 /room/roomCode/join으로 리다이렉트
+    if (roomCode) {
+      navigate(`/room/${roomCode}/join`, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [roomCode, navigate]);
+  
+  return (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>페이지를 이동하는 중...</p>
+    </div>
+  );
+};
+
+// 메인 App 컴포넌트
+function App() {
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/room/:roomCode/:action" element={<GameRoom />} />
+        <Route path="/game/:roomCode" element={<LegacyRedirect />} />
+        <Route path="*" element={<HomePage />} />
+      </Routes>
     </div>
   );
 }

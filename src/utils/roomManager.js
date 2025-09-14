@@ -11,15 +11,26 @@ export const generateRoomCode = () => {
   return result;
 };
 
-// 현재 URL에서 방 코드 추출
+// 현재 URL에서 방 코드 추출 (새로운 라우팅 구조 지원)
 export const getRoomCodeFromURL = () => {
   const path = window.location.pathname;
-  const match = path.match(/\/game\/([A-Z0-9]{6})/);
-  return match ? match[1] : null;
+  // 새로운 라우팅: /room/roomCode/action
+  const newMatch = path.match(/\/room\/([A-Z0-9]{6})\/(create|join)/);
+  if (newMatch) return newMatch[1];
+  
+  // 기존 라우팅: /game/roomCode (하위 호환성)
+  const legacyMatch = path.match(/\/game\/([A-Z0-9]{6})/);
+  return legacyMatch ? legacyMatch[1] : null;
 };
 
-// 방 URL 생성
-export const createRoomURL = (roomCode) => {
+// 방 URL 생성 (새로운 라우팅 구조)
+export const createRoomURL = (roomCode, action = 'join') => {
+  const baseURL = window.location.origin;
+  return `${baseURL}/room/${roomCode}/${action}`;
+};
+
+// 기존 방 URL 생성 (하위 호환성)
+export const createLegacyRoomURL = (roomCode) => {
   const baseURL = window.location.origin;
   return `${baseURL}/game/${roomCode}`;
 };
@@ -133,13 +144,13 @@ export const setupPopstateHandler = (onRoomChange) => {
 
 // QR 코드 생성용 데이터 URL
 export const generateQRData = (roomCode) => {
-  const roomURL = createRoomURL(roomCode);
+  const roomURL = createRoomURL(roomCode, 'join');
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(roomURL)}`;
 };
 
 // 링크 복사
 export const copyRoomLink = async (roomCode) => {
-  const roomURL = createRoomURL(roomCode);
+  const roomURL = createRoomURL(roomCode, 'join');
   
   try {
     if (navigator.clipboard && window.isSecureContext) {
