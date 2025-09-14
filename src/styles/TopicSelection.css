@@ -33,6 +33,20 @@
   line-height: 1.6;
 }
 
+.waiting-notice {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+}
+
+.waiting-notice p {
+  color: #f59e0b;
+  font-weight: 500;
+  margin: 0;
+}
+
 .topics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -54,6 +68,23 @@
   border-color: #007bff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 비활성화된 상태 */
+.topics-grid--disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.topic-card--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.topic-card--disabled:hover {
+  border-color: #e5e7eb;
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .topic-card--selected {

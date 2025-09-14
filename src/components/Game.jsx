@@ -29,7 +29,6 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     selectTopic,
     confirmRole,
     completeRoleAssignment,
-    forceConfirmAllRoles,
     nextSpeaker,
     vote,
     startFinalSpeech,
@@ -47,7 +46,8 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     getCurrentSpeaker,
     isExplanationLogDisabled,
     resetGame,
-    setGamePhase
+    setGamePhase,
+    updateGameStateFromSync
   } = useGameStore();
 
   useEffect(() => {
@@ -55,6 +55,43 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     const playingPlayers = players.filter(p => p.status === 'playing');
     initializeGame(playingPlayers);
   }, [players, initializeGame]);
+
+  // 플레이어 수가 변경될 때 게임 상태 동기화
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.realtimeSync) {
+      const playingPlayers = players.filter(p => p.status === 'playing');
+      if (playingPlayers.length >= 3 && gamePhase === 'topic_selection') {
+        // 플레이어가 충분하면 게임 상태를 동기화
+        window.realtimeSync.getGameState().then(gameState => {
+          if (gameState && gameState.gamePhase !== 'topic_selection') {
+            updateGameStateFromSync(gameState);
+          }
+        });
+      }
+    }
+  }, [players, gamePhase, updateGameStateFromSync]);
+
+  // 실시간 동기화 리스너 등록
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.realtimeSync) {
+      const handleGameStateUpdate = (event, data) => {
+        if (event === 'gameStateUpdated') {
+          // 게임 상태가 업데이트되면 store에 반영
+          updateGameStateFromSync(data);
+        }
+      };
+
+      // 리스너 등록
+      window.realtimeSync.addListener(handleGameStateUpdate);
+
+      // 정리 함수
+      return () => {
+        if (window.realtimeSync && window.realtimeSync.removeListener) {
+          window.realtimeSync.removeListener(handleGameStateUpdate);
+        }
+      };
+    }
+  }, [updateGameStateFromSync]);
 
   const getCurrentPhase = () => {
     if (gamePhase === 'topic_selection') {
@@ -87,7 +124,6 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
           ...baseProps,
           onComplete: completeRoleAssignment,
           onConfirmRole: confirmRole,
-          onForceConfirmAll: forceConfirmAllRoles
         };
       case 'explanation':
         return {
@@ -313,25 +349,27 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
         </PageTransition>
       </div>
 
-
-      <Chat
-        messages={chatMessages}
-        onSendMessage={addChatMessage}
-        currentPlayer={getCurrentPlayer()}
-        isVisible={isChatVisible}
-        onToggleVisibility={toggleChat}
-        disabled={gamePhase === 'topic_selection' || gamePhase === 'result'}
-        explanations={explanations}
-        onAddExplanation={addExplanation}
-        currentSpeaker={getCurrentSpeaker()}
-        allPlayers={gameState?.players || []}
-        onAddExplanationAsPlayer={(playerId, explanationText) => {
-          const player = gameState?.players.find(p => p.id === playerId);
-          if (player) {
-            addExplanation(explanationText, player.name);
-          }
-        }}
-      />
+      {/* 채팅과 설명 기록을 가로로 배치 */}
+      <div className="game-bottom-section">
+        <Chat
+          messages={chatMessages}
+          onSendMessage={addChatMessage}
+          currentPlayer={getCurrentPlayer()}
+          isVisible={isChatVisible}
+          onToggleVisibility={toggleChat}
+          disabled={gamePhase === 'topic_selection' || gamePhase === 'role_confirmation' || gamePhase === 'result'}
+          explanations={explanations}
+          onAddExplanation={addExplanation}
+          currentSpeaker={getCurrentSpeaker()}
+          allPlayers={gameState?.players || []}
+          onAddExplanationAsPlayer={(playerId, explanationText) => {
+            const player = gameState?.players.find(p => p.id === playerId);
+            if (player) {
+              addExplanation(explanationText, player.name);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 };

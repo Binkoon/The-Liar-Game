@@ -5,7 +5,7 @@ import Input from './Input';
 import Card from './Card';
 import '../styles/NicknameInput.css';
 
-const NicknameInput = ({ onJoin, roomCode, isHost = false }) => {
+const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true }) => {
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
 
@@ -52,7 +52,9 @@ const NicknameInput = ({ onJoin, roomCode, isHost = false }) => {
             <p className="nickname-subtitle">
               {isHost 
                 ? '새로운 게임 방을 만들고 호스트가 되세요.'
-                : `방 코드: ${roomCode}에 참여하세요.`
+                : showRoomCode 
+                  ? `방 코드: ${roomCode}에 참여하세요.`
+                  : '게임 방에 참여하세요.'
               }
             </p>
           </div>

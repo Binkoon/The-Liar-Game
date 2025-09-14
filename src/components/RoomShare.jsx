@@ -18,7 +18,7 @@ const RoomShare = ({ roomCode, isOpen, onClose }) => {
     }, 3000);
   };
 
-  const roomURL = `${window.location.origin}/game/${roomCode}`;
+  const roomURL = `${window.location.origin}/room/${roomCode}/join`;
   const qrDataURL = generateQRData(roomCode);
 
   if (!isOpen) return null;

@@ -58,6 +58,32 @@
   z-index: 5;
 }
 
+/* ===== CHAT AND EXPLANATION LAYOUT ===== */
+.game-bottom-section {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  align-items: flex-start;
+}
+
+.game-bottom-section .chat-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-bottom-section .explanation-log-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .game-bottom-section {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}
+
 /* ===== WORD ANNOUNCEMENT ===== */
 .word-announcement {
   position: fixed;

@@ -16,27 +16,22 @@ const ExplanationLog = ({
   onAddExplanationAsPlayer = null // 특정 플레이어로 설명 추가하는 함수
 }) => {
   const [newExplanation, setNewExplanation] = useState('');
-  const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const explanationsEndRef = useRef(null);
 
   const scrollToBottom = () => {
     explanationsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [explanations]);
+  // 자동 스크롤 비활성화 (사용자 요청에 따라)
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [explanations]);
 
   const handleAddExplanation = (e) => {
     e.preventDefault();
     if (newExplanation.trim() && !disabled) {
-      // 개발환경: 선택된 플레이어로 설명 추가
-      if (onAddExplanationAsPlayer && selectedPlayerId) {
-        onAddExplanationAsPlayer(selectedPlayerId, newExplanation.trim());
-        setNewExplanation('');
-      }
-      // 일반환경: 현재 플레이어가 발언권이 있을 때만
-      else if (currentPlayer && currentSpeaker && currentPlayer.id === currentSpeaker.id) {
+      // 현재 플레이어가 발언권이 있을 때만
+      if (currentPlayer && currentSpeaker && currentPlayer.id === currentSpeaker.id) {
         onAddExplanation(newExplanation.trim());
         setNewExplanation('');
       }
@@ -99,24 +94,6 @@ const ExplanationLog = ({
           </div>
         )}
         
-        {/* 개발환경: 플레이어 선택 */}
-        {onAddExplanationAsPlayer && allPlayers.length > 0 && (
-          <div className="dev-player-selector">
-            <label className="dev-label">🔧 개발모드: 플레이어 선택</label>
-            <select
-              value={selectedPlayerId}
-              onChange={(e) => setSelectedPlayerId(e.target.value)}
-              className="dev-player-select"
-            >
-              <option value="">플레이어를 선택하세요</option>
-              {allPlayers.map(player => (
-                <option key={player.id} value={player.id}>
-                  {player.name} ({player.role === 'liar' ? '라이어' : player.role === 'fanatic' ? '광신도' : '일반인'})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
         
         <form onSubmit={handleAddExplanation} className="explanation-input-form">
           <div className="explanation-input-container">

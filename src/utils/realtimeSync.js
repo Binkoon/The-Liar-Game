@@ -142,10 +142,10 @@ class RealtimeSync {
 
   // 동기화 시작
   startSync() {
-    // 3초마다 동기화 체크 (성능 최적화)
+    // 1초마다 동기화 체크 (실시간성 향상)
     this.syncInterval = setInterval(() => {
       this.sync();
-    }, 3000);
+    }, 1000);
   }
 
   // 강제 동기화 (중요한 변경사항)

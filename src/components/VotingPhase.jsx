@@ -5,7 +5,6 @@ import '../styles/VotingPhase.css';
 
 const VotingPhase = ({ gameState, currentPlayer, onVote, onStartFinalSpeech }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [devVoterId, setDevVoterId] = useState('');
 
   const hasVoted = currentPlayer ? gameState.votes[currentPlayer.id] !== undefined : false;
 
@@ -16,14 +15,6 @@ const VotingPhase = ({ gameState, currentPlayer, onVote, onStartFinalSpeech }) =
     setSelectedPlayerId('');
   };
 
-  // 개발 모드: 다른 플레이어를 대신해서 투표
-  const handleDevVote = () => {
-    if (!devVoterId || !selectedPlayerId) return;
-    
-    onVote(devVoterId, selectedPlayerId);
-    setDevVoterId('');
-    setSelectedPlayerId('');
-  };
 
   const handleStartFinalSpeech = () => {
     onStartFinalSpeech();
@@ -110,59 +101,6 @@ const VotingPhase = ({ gameState, currentPlayer, onVote, onStartFinalSpeech }) =
           </div>
         </div>
 
-        {/* 개발 모드: 다른 플레이어를 대신해서 투표 */}
-        <div className="dev-voting-section">
-          <div className="dev-notice">
-            <p>🔧 개발 모드: 다른 플레이어를 대신해서 투표할 수 있습니다</p>
-          </div>
-          <div className="dev-voting-form">
-            <div className="dev-form-row">
-              <label className="dev-label">
-                투표할 플레이어:
-                <select
-                  value={devVoterId}
-                  onChange={(e) => setDevVoterId(e.target.value)}
-                  className="dev-select"
-                >
-                  <option value="">플레이어 선택</option>
-                  {gameState.players.map(player => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="dev-form-row">
-              <label className="dev-label">
-                투표 대상:
-                <select
-                  value={selectedPlayerId}
-                  onChange={(e) => setSelectedPlayerId(e.target.value)}
-                  className="dev-select"
-                >
-                  <option value="">대상 선택</option>
-                  {gameState.players
-                    .filter(player => player.id !== devVoterId) // 선택된 투표자 제외
-                    .map(player => (
-                      <option key={player.id} value={player.id}>
-                        {player.name}
-                      </option>
-                    ))}
-                </select>
-              </label>
-            </div>
-            <Button
-              onClick={handleDevVote}
-              variant="secondary"
-              size="medium"
-              disabled={!devVoterId || !selectedPlayerId}
-              className="dev-vote-btn"
-            >
-              개발자 투표
-            </Button>
-          </div>
-        </div>
 
           <div className="voting-status">
             <div className="voting-progress">

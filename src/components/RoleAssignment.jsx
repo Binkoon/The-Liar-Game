@@ -4,7 +4,7 @@ import Button from './Button';
 import Modal from './Modal';
 import '../styles/RoleAssignment.css';
 
-const RoleAssignment = ({ gameState, currentPlayerId, onComplete, onConfirmRole, onForceConfirmAll }) => {
+const RoleAssignment = ({ gameState, currentPlayerId, onComplete, onConfirmRole }) => {
   const [showModal, setShowModal] = useState(false);
 
   
@@ -146,22 +146,6 @@ const RoleAssignment = ({ gameState, currentPlayerId, onComplete, onConfirmRole,
             </div>
           )}
 
-          {/* 개발/테스트용 강제 확인 버튼 */}
-          {!allConfirmed && (
-            <div className="dev-tools">
-              <div className="dev-notice">
-                <p>🔧 개발 모드: 테스트용 강제 확인 버튼</p>
-              </div>
-              <Button
-                onClick={onForceConfirmAll}
-                variant="secondary"
-                size="medium"
-                className="force-confirm-btn"
-              >
-                모든 플레이어 강제 확인 (테스트용)
-              </Button>
-            </div>
-          )}
         </div>
       </Card>
 

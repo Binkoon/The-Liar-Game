@@ -11,17 +11,6 @@ export const generateRoomCode = () => {
   return result;
 };
 
-// 현재 URL에서 방 코드 추출 (새로운 라우팅 구조 지원)
-export const getRoomCodeFromURL = () => {
-  const path = window.location.pathname;
-  // 새로운 라우팅: /room/roomCode/action
-  const newMatch = path.match(/\/room\/([A-Z0-9]{6})\/(create|join)/);
-  if (newMatch) return newMatch[1];
-  
-  // 기존 라우팅: /game/roomCode (하위 호환성)
-  const legacyMatch = path.match(/\/game\/([A-Z0-9]{6})/);
-  return legacyMatch ? legacyMatch[1] : null;
-};
 
 // 방 URL 생성 (새로운 라우팅 구조)
 export const createRoomURL = (roomCode, action = 'join') => {
@@ -114,33 +103,7 @@ export const cleanupOldGameStates = () => {
   }
 };
 
-// URL 업데이트 (히스토리 API 사용)
-export const updateURL = (roomCode, replace = false) => {
-  const newURL = createRoomURL(roomCode);
-  
-  if (replace) {
-    window.history.replaceState({ roomCode }, '', newURL);
-  } else {
-    window.history.pushState({ roomCode }, '', newURL);
-  }
-};
 
-// 브라우저 뒤로가기 처리
-export const setupPopstateHandler = (onRoomChange) => {
-  const handlePopstate = (event) => {
-    const roomCode = getRoomCodeFromURL();
-    if (roomCode) {
-      onRoomChange(roomCode);
-    }
-  };
-  
-  window.addEventListener('popstate', handlePopstate);
-  
-  // 정리 함수 반환
-  return () => {
-    window.removeEventListener('popstate', handlePopstate);
-  };
-};
 
 // QR 코드 생성용 데이터 URL
 export const generateQRData = (roomCode) => {

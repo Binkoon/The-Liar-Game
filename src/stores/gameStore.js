@@ -225,20 +225,44 @@ export const useGameStore = create(
           
           const { gameState } = get();
           
+          // 실시간 동기화에서 실제 플레이어 수 확인
+          let actualPlayerCount = gameState.players.length;
+          if (typeof window !== 'undefined' && window.realtimeSync) {
+            const allPlayers = window.realtimeSync.getAllPlayers();
+            actualPlayerCount = allPlayers.filter(p => p.status === 'playing').length;
+          }
+          
+          if (actualPlayerCount < 3) {
+            throw new Error('최소 3명의 플레이어가 필요합니다.');
+          }
+          
           // 주제 선택과 동시에 역할 배정
           const updatedGameState = gameUtils.assignRoles({
             ...gameState,
             topic: selectedTopic,
             word: '랜덤단어', // 실제로는 주제에 따른 랜덤 단어 선택
-          }, gameState.players.length);
+          }, actualPlayerCount);
+
+          const newGamePhase = 'role_confirmation';
+          const newShowRoleAssignment = true;
 
           set({
             gameState: updatedGameState,
             currentSpeaker: gameUtils.getCurrentSpeaker(updatedGameState),
-            gamePhase: 'role_confirmation',
-            showRoleAssignment: true,
+            gamePhase: newGamePhase,
+            showRoleAssignment: newShowRoleAssignment,
             error: null
           });
+
+          // Firebase 실시간 동기화를 통해 다른 플레이어들에게 상태 전달
+          if (typeof window !== 'undefined' && window.realtimeSync) {
+            window.realtimeSync.updateGameState({
+              gameState: updatedGameState,
+              gamePhase: newGamePhase,
+              showRoleAssignment: newShowRoleAssignment,
+              currentSpeaker: gameUtils.getCurrentSpeaker(updatedGameState)
+            });
+          }
 
         } catch (error) {
           const errorInfo = handleError(error, 'selectTopic');
@@ -286,7 +310,14 @@ export const useGameStore = create(
         try {
           const { gameState } = get();
           
-          if (gameState.players.length < 3) {
+          // 실시간 동기화에서 실제 플레이어 수 확인
+          let actualPlayerCount = gameState.players.length;
+          if (typeof window !== 'undefined' && window.realtimeSync) {
+            const allPlayers = window.realtimeSync.getAllPlayers();
+            actualPlayerCount = allPlayers.filter(p => p.status === 'playing').length;
+          }
+          
+          if (actualPlayerCount < 3) {
             throw new Error('최소 3명의 플레이어가 필요합니다.');
           }
 
@@ -296,7 +327,12 @@ export const useGameStore = create(
             throw new Error('모든 플레이어가 역할을 확인해야 합니다.');
           }
           
+          // 게임 상태를 완전히 업데이트
           set({
+            gameState: {
+              ...gameState,
+              gamePhase: 'explanation'
+            },
             gamePhase: 'explanation',
             showRoleAssignment: false,
             error: null
@@ -308,27 +344,6 @@ export const useGameStore = create(
         }
       },
 
-      // 강제 역할 확인 (개발용)
-      forceConfirmAllRoles: () => {
-        try {
-          const { gameState } = get();
-          const updatedPlayers = gameState.players.map(p => ({ ...p, roleConfirmed: true }));
-          
-          set({
-            gameState: {
-              ...gameState,
-              players: updatedPlayers
-            },
-            gamePhase: 'explanation',
-            showRoleAssignment: false,
-            error: null
-          });
-
-        } catch (error) {
-          const errorInfo = handleError(error, 'forceConfirmAllRoles');
-          set({ error: errorInfo.error });
-        }
-      },
 
       // 다음 발언자
       nextSpeaker: (explanationText = null) => {
@@ -635,6 +650,21 @@ export const useGameStore = create(
         } catch (error) {
           const errorInfo = handleError(error, 'setGamePhase');
           set({ error: errorInfo.error });
+        }
+      },
+
+      // 외부에서 게임 상태 업데이트 (실시간 동기화용)
+      updateGameStateFromSync: (newGameState) => {
+        try {
+          set({
+            gameState: newGameState.gameState || get().gameState,
+            gamePhase: newGameState.gamePhase || get().gamePhase,
+            showRoleAssignment: newGameState.showRoleAssignment !== undefined ? newGameState.showRoleAssignment : get().showRoleAssignment,
+            currentSpeaker: newGameState.currentSpeaker || get().currentSpeaker,
+            error: null
+          });
+        } catch (error) {
+          console.error('게임 상태 동기화 실패:', error);
         }
       },
 

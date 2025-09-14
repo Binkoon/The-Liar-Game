@@ -19,17 +19,16 @@ const Chat = ({
   onAddExplanationAsPlayer
 }) => {
   const [newMessage, setNewMessage] = useState('');
-  const [devExplanation, setDevExplanation] = useState('');
-  const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // 자동 스크롤 비활성화 (사용자 요청에 따라)
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -39,13 +38,6 @@ const Chat = ({
     }
   };
 
-  const handleDevExplanationAdd = () => {
-    if (devExplanation.trim() && selectedPlayerId && onAddExplanationAsPlayer) {
-      onAddExplanationAsPlayer(selectedPlayerId, devExplanation.trim());
-      setDevExplanation('');
-      setSelectedPlayerId('');
-    }
-  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -88,42 +80,6 @@ const Chat = ({
             )}
           </div>
           
-          {/* 개발모드: 설명 추가 */}
-          {process.env.NODE_ENV === 'development' && onAddExplanationAsPlayer && allPlayers.length > 0 && (
-            <div className="dev-explanation-section">
-              <label className="dev-label">🔧 개발모드: 설명 추가</label>
-              <div className="dev-explanation-form">
-                <select 
-                  className="dev-player-select"
-                  onChange={(e) => setSelectedPlayerId(e.target.value)}
-                >
-                  <option value="">플레이어를 선택하세요</option>
-                  {allPlayers.map(player => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="dev-explanation-input">
-                  <input
-                    type="text"
-                    placeholder="제시어에 대한 설명을 입력하세요..."
-                    value={devExplanation}
-                    onChange={(e) => setDevExplanation(e.target.value)}
-                    className="dev-explanation-text"
-                  />
-                  <Button
-                    onClick={handleDevExplanationAdd}
-                    variant="primary"
-                    size="small"
-                    className="dev-explanation-btn"
-                  >
-                    추가
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         
         <div className="chat-messages">
