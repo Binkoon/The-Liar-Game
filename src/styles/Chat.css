@@ -1,0 +1,343 @@
+.chat-toggle {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.chat-toggle-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.chat-toggle-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.chat-card {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 500px;
+  height: 600px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 설명 기록 섹션 */
+.explanations-section {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.explanations-section h4 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.explanations-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.explanation-item {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #3b82f6;
+}
+
+.explanation-player {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.explanation-text {
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.no-explanations {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.current-speaker-notice {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.current-speaker-notice p {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 개발모드 설명 추가 */
+.dev-explanation-section {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.dev-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #d97706;
+  margin-bottom: 0.5rem;
+}
+
+.dev-explanation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dev-player-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.dev-player-select:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+}
+
+.dev-explanation-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dev-explanation-text {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.dev-explanation-text:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+}
+
+.dev-explanation-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 500px;
+}
+
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  border-radius: 8px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.own-message {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  margin-left: auto;
+}
+
+.other-message {
+  align-self: flex-start;
+  background: rgba(243, 244, 246, 0.8);
+  color: #374151;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.message-player {
+  font-weight: 600;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.message-time {
+  font-size: 0.625rem;
+  opacity: 0.7;
+}
+
+.message-content {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.chat-input-form {
+  padding: 1rem;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.chat-input-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.chat-send-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+}
+
+.chat-send-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+}
+
+.chat-actions {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  background: rgba(248, 250, 252, 0.8);
+  text-align: center;
+}
+
+.chat-close-btn {
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  color: #6b7280;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+}
+
+.chat-close-btn:hover {
+  background: rgba(107, 114, 128, 0.2);
+  color: #374151;
+}
+
+/* 스크롤바 스타일 */
+.chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 2px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 2px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .chat-card {
+    width: 400px;
+    height: 500px;
+  }
+  
+  .chat-content {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-card {
+    width: calc(50vw - 10px);
+    height: 400px;
+    bottom: 10px;
+    left: 10px;
+  }
+  
+  .chat-toggle {
+    bottom: 10px;
+    left: 10px;
+  }
+  
+  .chat-content {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-card {
+    width: calc(100vw - 20px);
+    left: 10px;
+    right: 10px;
+    height: 350px;
+  }
+  
+  .chat-content {
+    height: 250px;
+  }
+}

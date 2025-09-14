@@ -1,0 +1,191 @@
+/* ===== INPUT COMPONENT ===== */
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-gray-900);
+  background: white;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-gray-500);
+  font-weight: var(--font-weight-normal);
+}
+
+.input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+  background: white;
+}
+
+.input:hover:not(:focus) {
+  border-color: var(--color-gray-400);
+}
+
+.input:disabled {
+  background: var(--color-gray-100);
+  color: var(--color-gray-500);
+  border-color: var(--color-gray-200);
+  cursor: not-allowed;
+}
+
+/* ===== INPUT VARIANTS ===== */
+.input--error {
+  border-color: var(--color-error-500);
+  background: var(--color-error-50);
+}
+
+.input--error:focus {
+  border-color: var(--color-error-500);
+  box-shadow: 0 0 0 3px var(--color-error-100);
+}
+
+.input--success {
+  border-color: var(--color-success-500);
+  background: var(--color-success-50);
+}
+
+.input--success:focus {
+  border-color: var(--color-success-500);
+  box-shadow: 0 0 0 3px var(--color-success-100);
+}
+
+.input--warning {
+  border-color: var(--color-warning-500);
+  background: var(--color-warning-50);
+}
+
+.input--warning:focus {
+  border-color: var(--color-warning-500);
+  box-shadow: 0 0 0 3px var(--color-warning-100);
+}
+
+/* ===== INPUT SIZES ===== */
+.input--small {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+}
+
+.input--large {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-xl);
+}
+
+/* ===== TEXTAREA ===== */
+.input--textarea {
+  min-height: 6rem;
+  resize: vertical;
+  font-family: var(--font-family-sans);
+  line-height: var(--line-height-normal);
+}
+
+.input--textarea.input--small {
+  min-height: 4rem;
+}
+
+.input--textarea.input--large {
+  min-height: 8rem;
+}
+
+/* ===== INPUT GROUP ===== */
+.input-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-700);
+  margin-bottom: var(--space-1);
+}
+
+.input-help {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  margin-top: var(--space-1);
+}
+
+.input-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error-600);
+  margin-top: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.input-error::before {
+  content: '⚠';
+  font-size: var(--font-size-xs);
+}
+
+/* ===== INPUT WITH ICON ===== */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-gray-400);
+  font-size: var(--font-size-lg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-icon + .input {
+  padding-left: var(--space-10);
+}
+
+.input-icon--right {
+  left: auto;
+  right: var(--space-3);
+}
+
+.input-icon--right + .input {
+  padding-left: var(--space-4);
+  padding-right: var(--space-10);
+}
+
+/* ===== SEARCH INPUT ===== */
+.input--search {
+  padding-left: var(--space-10);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: var(--space-3) center;
+  background-size: 1.25rem;
+}
+
+/* ===== FOCUS RING ===== */
+.input:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .input {
+    font-size: var(--font-size-base);
+  }
+  
+  .input--small {
+    font-size: var(--font-size-sm);
+  }
+  
+  .input--large {
+    font-size: var(--font-size-base);
+  }
+}
