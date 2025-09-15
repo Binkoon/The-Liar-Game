@@ -15,6 +15,16 @@ const PlayerCard = ({
   onToggleSpectator,
   className = ''
 }) => {
+  // player가 null이거나 undefined인 경우 처리
+  if (!player) {
+    return (
+      <Card className={`player-card player-card--loading ${className}`}>
+        <div className="player-info">
+          <div className="player-name">로딩 중...</div>
+        </div>
+      </Card>
+    );
+  }
   const getRoleDisplayName = (role) => {
     switch (role) {
       case 'civilian': return '일반인';

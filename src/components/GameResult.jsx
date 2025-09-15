@@ -199,11 +199,14 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
             <h3>🎭 모든 플레이어의 직업</h3>
             <div className="players-roles-grid">
               {gameState.players.map((player, index) => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!player) return null;
+                
                 const isWinner = finalWinners.some(w => w.id === player.id);
                 return (
                   <div key={player.id} className={`player-role-card ${isWinner ? 'winner' : ''}`}>
                     <div className="player-role-header">
-                      <h4 className="player-name">{player.name}</h4>
+                      <h4 className="player-name">{player.name || '알 수 없음'}</h4>
                       {isWinner && <span className="winner-crown">👑</span>}
                     </div>
                     <div className="player-role-badge" style={{ backgroundColor: getRoleColor(player.role) }}>

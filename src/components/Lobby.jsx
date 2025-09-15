@@ -64,28 +64,33 @@ const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, 
             className="players-grid"
             layout
           >
-            {playingPlayers.map((player, index) => (
-              <motion.div
-                key={player.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ 
-                  duration: 0.3,
-                  delay: index * 0.1
-                }}
-              >
-                <PlayerCard
-                  player={player}
-                  onClick={currentPlayer && currentPlayer.id === player.id ? () => onRemovePlayer(player.id) : undefined}
-                  className={currentPlayer && currentPlayer.id === player.id ? "player-card--removable" : ""}
-                  showHost={player.isHost}
-                  showSpectatorToggle={currentPlayer && currentPlayer.id === player.id}
-                  onToggleSpectator={onToggleSpectator}
-                />
-              </motion.div>
-            ))}
+            {playingPlayers.map((player, index) => {
+              // player가 null이거나 undefined인 경우 건너뛰기
+              if (!player) return null;
+              
+              return (
+                <motion.div
+                  key={player.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ 
+                    duration: 0.3,
+                    delay: index * 0.1
+                  }}
+                >
+                  <PlayerCard
+                    player={player}
+                    onClick={currentPlayer && currentPlayer.id === player.id ? () => onRemovePlayer(player.id) : undefined}
+                    className={currentPlayer && currentPlayer.id === player.id ? "player-card--removable" : ""}
+                    showHost={player.isHost}
+                    showSpectatorToggle={currentPlayer && currentPlayer.id === player.id}
+                    onToggleSpectator={onToggleSpectator}
+                  />
+                </motion.div>
+              );
+            })}
           </motion.div>
           
           {/* 실시간 상태 표시 */}
@@ -107,28 +112,33 @@ const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, 
               className="players-grid"
               layout
             >
-              {spectatingPlayers.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ 
-                    duration: 0.3,
-                    delay: index * 0.1
-                  }}
-                >
-                  <PlayerCard
-                    player={player}
-                    onClick={currentPlayer && currentPlayer.id === player.id ? () => onRemovePlayer(player.id) : undefined}
-                    className={`player-card--spectator ${currentPlayer && currentPlayer.id === player.id ? "player-card--removable" : ""}`}
-                    showHost={player.isHost}
-                    showSpectatorToggle={currentPlayer && currentPlayer.id === player.id}
-                    onToggleSpectator={onToggleSpectator}
-                  />
-                </motion.div>
-              ))}
+              {spectatingPlayers.map((player, index) => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!player) return null;
+                
+                return (
+                  <motion.div
+                    key={player.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ 
+                      duration: 0.3,
+                      delay: index * 0.1
+                    }}
+                  >
+                    <PlayerCard
+                      player={player}
+                      onClick={currentPlayer && currentPlayer.id === player.id ? () => onRemovePlayer(player.id) : undefined}
+                      className={`player-card--spectator ${currentPlayer && currentPlayer.id === player.id ? "player-card--removable" : ""}`}
+                      showHost={player.isHost}
+                      showSpectatorToggle={currentPlayer && currentPlayer.id === player.id}
+                      onToggleSpectator={onToggleSpectator}
+                    />
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </AnimatedCard>
         )}

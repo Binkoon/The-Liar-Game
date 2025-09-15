@@ -54,10 +54,10 @@ const VotingPhase = ({ gameState, currentPlayer, onVote, onStartFinalSpeech }) =
               >
                 <option value="">플레이어를 선택하세요</option>
                 {gameState.players
-                  .filter(player => player.id !== currentPlayer?.id) // 자기 자신 제외
+                  .filter(player => player && player.id !== currentPlayer?.id) // null 체크 및 자기 자신 제외
                   .map(player => (
                     <option key={player.id} value={player.id}>
-                      {player.name}
+                      {player.name || '알 수 없음'}
                     </option>
                   ))}
               </select>
@@ -83,6 +83,9 @@ const VotingPhase = ({ gameState, currentPlayer, onVote, onStartFinalSpeech }) =
           <h4>플레이어 상태</h4>
           <div className="players-grid">
             {gameState.players.map(player => {
+              // player가 null이거나 undefined인 경우 건너뛰기
+              if (!player) return null;
+              
               const hasPlayerVoted = gameState.votes[player.id] !== undefined;
               return (
                 <div key={player.id} className="voting-player-container">

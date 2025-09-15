@@ -16,7 +16,6 @@ import {
 
 class FirebaseRealtimeSync {
   constructor(roomCode) {
-    console.log('FirebaseRealtimeSync 생성자 호출:', roomCode);
     
     if (!database) {
       console.error('Firebase Database가 초기화되지 않았습니다!');

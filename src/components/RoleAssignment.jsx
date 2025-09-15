@@ -100,14 +100,19 @@ const RoleAssignment = ({ gameState, currentPlayerId, onComplete, onConfirmRole 
           <div className="players-status">
             <h4>플레이어 확인 상태</h4>
             <div className="players-list">
-              {gameState.players.map(player => (
-                <div key={player.id} className={`player-status ${player.roleConfirmed ? 'confirmed' : 'pending'}`}>
-                  <span className="player-name">{player.name}</span>
-                  <span className="confirmation-status">
-                    {player.roleConfirmed ? '✅ 확인 완료' : '⏳ 대기 중'}
-                  </span>
-                </div>
-              ))}
+              {gameState.players.map(player => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!player) return null;
+                
+                return (
+                  <div key={player.id} className={`player-status ${player.roleConfirmed ? 'confirmed' : 'pending'}`}>
+                    <span className="player-name">{player.name || '알 수 없음'}</span>
+                    <span className="confirmation-status">
+                      {player.roleConfirmed ? '✅ 확인 완료' : '⏳ 대기 중'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

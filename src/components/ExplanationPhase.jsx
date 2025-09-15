@@ -45,10 +45,18 @@ const ExplanationPhase = ({ gameState, currentPlayer, currentSpeaker, onNextSpea
   };
 
   const getPlayerInfo = (player) => {
+    if (!player) {
+      return {
+        name: '알 수 없음',
+        role: 'civilian',
+        hasSpoken: false
+      };
+    }
+    
     return {
-      name: player.name,
-      role: player.role,
-      hasSpoken: player.hasSpoken
+      name: player.name || '알 수 없음',
+      role: player.role || 'civilian',
+      hasSpoken: player.hasSpoken || false
     };
   };
 
@@ -66,6 +74,9 @@ const ExplanationPhase = ({ gameState, currentPlayer, currentSpeaker, onNextSpea
           <h4>플레이어 상태</h4>
           <div className="players-grid">
             {gameState.players.map(player => {
+              // player가 null이거나 undefined인 경우 건너뛰기
+              if (!player) return null;
+              
               const playerInfo = getPlayerInfo(player);
               const isCurrentSpeaker = player.id === currentSpeaker?.id;
               return (

@@ -47,29 +47,34 @@ const RevotePhase = ({
           <div className="revote-players">
             <h3>누구를 의심하시나요?</h3>
             <div className="players-grid">
-              {players.map((player) => (
-                <motion.div
-                  key={player.id}
-                  className={`player-vote-card ${hasVoted === player.id ? 'voted' : ''} ${hasVoted && hasVoted !== player.id ? 'disabled' : ''}`}
-                  onClick={() => !hasVoted && handleVote(player.id)}
-                  whileHover={!hasVoted ? { scale: 1.05 } : {}}
-                  whileTap={!hasVoted ? { scale: 0.95 } : {}}
-                >
-                  <PlayerCard
-                    player={player}
-                    showHost={player.isHost}
-                    className="vote-player-card"
-                  />
-                  <div className="vote-count">
-                    {getVoteCount(player.id)}표
-                  </div>
-                  {hasVoted === player.id && (
-                    <div className="vote-indicator">
-                      ✓ 선택됨
+              {players.map((player) => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!player) return null;
+                
+                return (
+                  <motion.div
+                    key={player.id}
+                    className={`player-vote-card ${hasVoted === player.id ? 'voted' : ''} ${hasVoted && hasVoted !== player.id ? 'disabled' : ''}`}
+                    onClick={() => !hasVoted && handleVote(player.id)}
+                    whileHover={!hasVoted ? { scale: 1.05 } : {}}
+                    whileTap={!hasVoted ? { scale: 0.95 } : {}}
+                  >
+                    <PlayerCard
+                      player={player}
+                      showHost={player.isHost}
+                      className="vote-player-card"
+                    />
+                    <div className="vote-count">
+                      {getVoteCount(player.id)}표
                     </div>
-                  )}
-                </motion.div>
-              ))}
+                    {hasVoted === player.id && (
+                      <div className="vote-indicator">
+                        ✓ 선택됨
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
 

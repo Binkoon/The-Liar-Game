@@ -97,6 +97,9 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
             </p>
             <div className="players-list">
               {votingPlayers.map(player => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!player) return null;
+                
                 const decision = withdrawalDecisions[player.id];
                 const isCurrentPlayer = player.id === currentPlayerId;
 

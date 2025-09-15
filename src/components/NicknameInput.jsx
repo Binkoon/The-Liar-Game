@@ -26,7 +26,7 @@ const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true, 
 
     // 중복 검사
     const isDuplicate = existingPlayers.some(player => 
-      player.name && player.name.toLowerCase() === trimmedNickname.toLowerCase()
+      player && player.name && player.name.toLowerCase() === trimmedNickname.toLowerCase()
     );
     
     if (isDuplicate) {
