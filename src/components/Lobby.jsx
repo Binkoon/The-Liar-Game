@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import AnimatedButton from './AnimatedButton';
 import Input from './Input';
@@ -12,6 +13,7 @@ const Lobby = ({ players, onRemovePlayer, onStartGame, roomCode, currentPlayer, 
     players: players,
     currentPlayer: currentPlayer,
     currentPlayerIsHost: currentPlayer?.isHost,
+    currentPlayerName: currentPlayer?.name,
     playingCount: players.filter(p => p.status === 'playing').length
   });
 

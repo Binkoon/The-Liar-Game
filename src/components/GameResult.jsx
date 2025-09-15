@@ -15,24 +15,32 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
   const mostVotedPlayer = gameState.players.find(p => p.id === voteResult.mostVotedPlayer);
   const isLiarCaught = mostVotedPlayer?.role === 'liar';
 
-  // 승리자 계산
+  // 승리자 계산 (규칙에 따른 정확한 승리 조건)
   const getWinners = () => {
     const winners = [];
     
-    if (isLiarCaught) {
-      // 라이어가 잡힌 경우
+    if (!mostVotedPlayer) return winners;
+    
+    // 라이어가 지목된 경우
+    if (mostVotedPlayer.role === 'liar') {
+      // 일반인 승리: 라이어 지목 성공
       gameState.players.forEach(player => {
         if (player.role === 'civilian') {
           winners.push({ ...player, reason: '라이어를 성공적으로 찾았습니다!' });
         }
       });
-    } else {
-      // 라이어가 안 잡힌 경우
+    }
+    // 광신도가 지목된 경우
+    else if (mostVotedPlayer.role === 'fanatic') {
+      // 광신도 승리: 본인이 지목당함
+      winners.push({ ...mostVotedPlayer, reason: '광신도로 지목되어 승리했습니다!' });
+    }
+    // 일반인이 지목된 경우
+    else if (mostVotedPlayer.role === 'civilian') {
+      // 라이어 승리: 일반인 지목 성공
       gameState.players.forEach(player => {
         if (player.role === 'liar') {
-          winners.push({ ...player, reason: '라이어로 지목되지 않았습니다!' });
-        } else if (player.role === 'fanatic' && mostVotedPlayer?.id === player.id) {
-          winners.push({ ...player, reason: '광신도로 라이어로 지목되었습니다!' });
+          winners.push({ ...player, reason: '일반인을 지목하여 승리했습니다!' });
         }
       });
     }
@@ -110,6 +118,29 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
     }
   };
 
+  // 라이어 답변 결과에 따른 최종 승리자 재계산
+  const getFinalWinners = () => {
+    if (liarAnswerResult === null) return winners;
+    
+    // 라이어가 지목되었고 답변을 했을 때
+    if (mostVotedPlayer?.role === 'liar') {
+      if (liarAnswerResult) {
+        // 라이어가 정답을 맞혔으면 라이어 승리
+        return gameState.players.filter(p => p.role === 'liar').map(player => ({
+          ...player,
+          reason: '라이어가 제시어를 맞혀 승리했습니다!'
+        }));
+      } else {
+        // 라이어가 틀렸으면 일반인 승리 (기존 winners 유지)
+        return winners;
+      }
+    }
+    
+    return winners;
+  };
+
+  const finalWinners = getFinalWinners();
+
 
   return (
     <div className="game-result">
@@ -121,11 +152,11 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
           </div>
 
           {/* 승리자 표시 */}
-          {winners.length > 0 && (
+          {finalWinners.length > 0 && (
             <div className="winners-section">
               <h3>🏆 승리자</h3>
               <div className="winners-list">
-                {winners.map((winner, index) => (
+                {finalWinners.map((winner, index) => (
                   <div key={winner.id} className="winner-card">
                     <div className="winner-badge">
                       <span className="winner-icon">👑</span>
@@ -168,7 +199,7 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
             <h3>🎭 모든 플레이어의 직업</h3>
             <div className="players-roles-grid">
               {gameState.players.map((player, index) => {
-                const isWinner = winners.some(w => w.id === player.id);
+                const isWinner = finalWinners.some(w => w.id === player.id);
                 return (
                   <div key={player.id} className={`player-role-card ${isWinner ? 'winner' : ''}`}>
                     <div className="player-role-header">
@@ -179,7 +210,7 @@ const GameResult = ({ gameState, onLiarAnswer, onBackToLobby, onNewGame, calcula
                       {getRoleBadge(player.role)} {getRoleDisplayName(player.role)}
                     </div>
                     {isWinner && (
-                      <p className="winner-reason-small">{winners.find(w => w.id === player.id)?.reason}</p>
+                      <p className="winner-reason-small">{finalWinners.find(w => w.id === player.id)?.reason}</p>
                     )}
                   </div>
                 );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams, useLocation, Routes, Route } from 'react-router-dom';
 
@@ -13,7 +14,9 @@ const RoomShare = lazy(() => import('./components/RoomShare'));
 import { 
   generateRoomCode
 } from './utils/roomManager';
-import { initFirebaseRealtimeSync, getFirebaseRealtimeSync, cleanupFirebaseRealtimeSync } from './utils/firebaseRealtimeSync';
+import { initFirebaseRealtimeSync, getFirebaseRealtimeSync, cleanupFirebaseRealtimeSync, FirebaseRealtimeSync } from './utils/firebaseRealtimeSync';
+import { syncWithFirebase } from './utils/valtioFirebaseSync';
+import { GameProvider } from './contexts/GameContext';
 import { database } from '../firebaseInit.js';
 import './App.css';
 
@@ -21,10 +24,7 @@ import './App.css';
 const HomePage = () => {
   const navigate = useNavigate();
   
-  console.log('HomePage 컴포넌트 렌더링');
-  
   useEffect(() => {
-    console.log('HomePage useEffect 실행 - /create-room으로 이동');
     // 최초 접속 시 바로 방 만들기 화면으로 이동
     navigate('/create-room', { replace: true });
   }, [navigate]);
@@ -68,6 +68,7 @@ const CreateRoomPage = () => {
             roomCode=""
             isHost={true}
             showRoomCode={false}
+            existingPlayers={[]}
           />
         </Suspense>
       </motion.div>
@@ -92,23 +93,7 @@ const GameRoom = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
 
-  // 새로고침 경고 처리
-  const handleBeforeUnload = async (e) => {
-    if (gameStarted) {
-      e.preventDefault();
-      e.returnValue = '';
-      setShowRefreshWarning(true);
-      return '';
-    }
-    
-    // 호스트가 나가면 방 즉시 삭제
-    if (currentPlayer?.isHost) {
-      const sync = getFirebaseRealtimeSync();
-      if (sync) {
-        await sync.deleteRoom();
-      }
-    }
-  };
+  // 새로고침 경고 처리는 useEffect 내부로 이동
 
   const handleRefreshConfirm = () => {
     setShowRefreshWarning(false);
@@ -119,42 +104,129 @@ const GameRoom = () => {
     setShowRefreshWarning(false);
   };
 
+  // 키보드 단축키로 새로고침 차단
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+      e.preventDefault();
+      setShowRefreshWarning(true);
+    }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      setShowRefreshWarning(true);
+    }
+  };
+
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     if (!roomCode) {
-      console.log('roomCode가 없습니다:', roomCode);
       return;
     }
     
-  console.log('GameRoom 초기화 시작:', { roomCode, action });
-  
-  try {
-    // Firebase Database 연결 확인
-    console.log('Firebase Database 상태:', database);
+    // 중복 실행 방지를 위한 강화된 체크
+    const initKey = `${roomCode}_${action}`;
+    const sessionKey = `init_${initKey}`;
     
-    if (!database) {
-      throw new Error('Firebase Database가 초기화되지 않았습니다');
+    // 메모리와 세션 스토리지 모두 체크
+    if (window.lastInitKey === initKey || sessionStorage.getItem(sessionKey)) {
+      return;
     }
     
-    // Firebase 실시간 동기화 초기화
-    console.log('Firebase 동기화 초기화 시도...');
-      
-      const sync = initFirebaseRealtimeSync(roomCode);
-      
-      if (!sync) {
-        throw new Error('Firebase 동기화 인스턴스 생성 실패');
-      }
-      
-      // 전역으로 사용할 수 있도록 설정
-      window.realtimeSync = sync;
-      console.log('Firebase 동기화 인스턴스 생성됨:', sync);
+    // 중복 실행 방지 플래그 설정
+    window.lastInitKey = initKey;
+    sessionStorage.setItem(sessionKey, 'true');
     
-    // 동기화 리스너 등록
-    sync.addListener(async (event, data) => {
-      if (event === 'playersUpdated') {
-        const allPlayers = Object.values(data.players || {});
-        setPlayers(allPlayers);
-      }
+    // 기존 동기화 인스턴스가 있으면 정리
+    if (window.realtimeSync) {
+      cleanupFirebaseRealtimeSync();
+    }
+    
+    // 새로고침 완전 차단
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '게임 중에는 새로고침할 수 없습니다.';
+      setShowRefreshWarning(true);
+      return '게임 중에는 새로고침할 수 없습니다.';
+    };
+
+    // async 함수로 초기화 로직 분리
+    const initializeGame = async () => {
+      try {
+        // Firebase Database 연결 확인
+        
+        if (!database) {
+          throw new Error('Firebase Database가 초기화되지 않았습니다');
+        }
+        
+        // 호스트인 경우 미리 호스트 상태 설정
+        if (action === 'create') {
+          console.log('호스트 방 생성 - 호스트 상태 미리 설정');
+        }
+        
+        // Firebase 실시간 동기화 초기화
+        console.log('Firebase 동기화 초기화 시도...');
+        
+        // 호스트인 경우 미리 호스트 상태 설정
+        let sync;
+        if (action === 'create') {
+          // 호스트용 임시 인스턴스 생성
+          sync = new FirebaseRealtimeSync(roomCode);
+          sync.isHost = true;
+          await sync.init();
+        } else {
+          // 게스트용 일반 초기화
+          sync = await initFirebaseRealtimeSync(roomCode);
+        }
+          
+        if (!sync) {
+          throw new Error('Firebase 동기화 인스턴스 생성 실패');
+        }
+          
+          // 전역으로 사용할 수 있도록 설정
+          window.realtimeSync = sync;
+          
+          // Valtio와 Firebase 동기화 설정
+          const valtioSync = syncWithFirebase(roomCode);
+          window.valtioSync = valtioSync;
+          
+          // init() 완료 후 바로 플레이어 등록 처리
+          
+          // 플레이어 등록 처리
+          if (location.state?.nickname) {
+            const nickname = location.state.nickname;
+            
+            // 닉네임이 없거나 빈 문자열인 경우 기본값 설정
+            const playerName = nickname && nickname.trim() ? nickname.trim() : (action === 'create' ? '방장' : '플레이어');
+
+            const newPlayer = {
+              name: playerName,
+              isHost: action === 'create'
+            };
+
+            sync.registerPlayer(newPlayer).then((registeredPlayer) => {
+              setCurrentPlayer(registeredPlayer);
+              setShowNicknameInput(false);
+            }).catch(error => {
+              console.error('플레이어 등록 실패:', error);
+            });
+          } else {
+            // 닉네임이 없으면 닉네임 입력 화면 표시
+            setShowNicknameInput(true);
+          }
+      
+      // 동기화 리스너 등록
+      sync.addListener(async (event, data) => {
+        if (event === 'playersUpdated') {
+          const allPlayers = Object.values(data.players || {});
+          setPlayers(allPlayers);
+
+          // 현재 플레이어의 호스트 상태도 업데이트
+          const currentPlayerData = allPlayers.find(p => p.id === sync.playerId);
+          if (currentPlayerData && currentPlayerData.isHost !== currentPlayer?.isHost) {
+            setCurrentPlayer(prev => prev ? { ...prev, isHost: currentPlayerData.isHost } : null);
+          }
+        }
+      
+      // initCompleted 이벤트는 제거 - init() 완료 후 직접 처리
       
       // 게임 상태 업데이트 이벤트 처리
       if (event === 'gameStateUpdated') {
@@ -164,76 +236,71 @@ const GameRoom = () => {
         }
       }
       
-      // 방 삭제 이벤트 처리 (호스트 퇴장)
-      if (event === 'roomDeleted') {
-        console.log('호스트가 나가서 방이 삭제되었습니다');
-        setGameStarted(false);
-        setCurrentPlayer(null);
-        setPlayers([]);
-        navigate('/');
-      }
-    });
-    
-    // 기존 플레이어들 로드
-    console.log('기존 플레이어들 로드 시도...');
-    sync.getAllPlayers().then(allPlayers => {
-      console.log('기존 플레이어들 로드됨:', allPlayers);
-      setPlayers(allPlayers);
-    }).catch(error => {
-      console.error('플레이어 로드 실패:', error);
-    });
-    
-    console.log('게임 상태 로드 시도...');
-    sync.getGameState().then(gameState => {
-      console.log('게임 상태 로드됨:', gameState);
-      if (gameState) {
-        setGameStarted(gameState.gameStarted || false);
-      }
-    }).catch(error => {
-      console.error('게임 상태 로드 실패:', error);
-    });
-    
-    // location state에서 닉네임이 있으면 바로 참여
-    if (location.state?.nickname) {
-      console.log('location.state에서 닉네임 발견:', location.state.nickname);
-      const nickname = location.state.nickname;
-      const newPlayer = {
-        name: nickname,
-        isHost: action === 'create'
-      };
-      console.log('플레이어 등록 시도:', newPlayer);
-      sync.registerPlayer(newPlayer).then((registeredPlayer) => {
-        console.log('플레이어 등록 성공:', registeredPlayer);
-        console.log('등록된 플레이어의 isHost:', registeredPlayer.isHost);
-        setCurrentPlayer(registeredPlayer);
-        setShowNicknameInput(false);
-      }).catch(error => {
-        console.error('플레이어 등록 실패:', error);
+        // 방 삭제 이벤트 처리 (호스트 퇴장)
+        if (event === 'roomDeleted') {
+          setGameStarted(false);
+          setCurrentPlayer(null);
+          setPlayers([]);
+          navigate('/');
+        }
       });
-    } else {
-      // 닉네임이 없으면 닉네임 입력 화면 표시
-      console.log('닉네임이 없어서 닉네임 입력 화면 표시');
-      setShowNicknameInput(true);
-    }
+      
+      // 기존 플레이어들 로드 및 중복 정리
+      sync.getAllPlayers().then(async allPlayers => {
+        // 중복 플레이어 정리
+        await sync.cleanupDuplicatePlayers();
 
-    console.log('로딩 완료');
-    setIsLoading(false);
+        // 정리 후 다시 로드
+        const cleanedPlayers = await sync.getAllPlayers();
+        setPlayers(cleanedPlayers);
+      }).catch(error => {
+        console.error('플레이어 로드 실패:', error);
+      });
 
-    // beforeunload 이벤트 리스너 등록
-    window.addEventListener('beforeunload', handleBeforeUnload);
+      sync.getGameState().then(gameState => {
+        if (gameState) {
+          setGameStarted(gameState.gameStarted || false);
+        }
+      }).catch(error => {
+        console.error('게임 상태 로드 실패:', error);
+      });
+      setIsLoading(false);
 
-    } catch (error) {
-      console.error('Firebase 초기화 실패:', error);
-      setErrorMessage('연결에 실패했습니다. 페이지를 새로고침해주세요.');
-      setShowError(true);
-    }
+      // beforeunload 이벤트 리스너 등록
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // 키보드 단축키로 새로고침 차단
+      window.addEventListener('keydown', handleKeyDown);
+
+      } catch (error) {
+        console.error('Firebase 초기화 실패:', error);
+        setErrorMessage('연결에 실패했습니다. 페이지를 새로고침해주세요.');
+        setShowError(true);
+        setIsLoading(false); // 에러 발생 시에도 로딩 해제
+      }
+    };
+    
+    // initializeGame 함수 호출
+    initializeGame().catch(error => {
+      console.error('게임 초기화 실패:', error);
+      setIsLoading(false);
+    });
 
     // 정리
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('keydown', handleKeyDown);
+      
+      // Valtio 동기화 정리
+      if (window.valtioSync && window.valtioSync.cleanup) {
+        window.valtioSync.cleanup();
+      }
+      
       cleanupFirebaseRealtimeSync();
+      // 세션 스토리지는 유지하여 같은 roomCode/action으로 재실행 방지
+      // initKey는 유지하여 같은 roomCode/action으로 재실행 방지
     };
-  }, [roomCode, action, location.state]);
+  }, [roomCode, action, currentPlayer?.isHost, location.state.nickname, navigate]); // 필요한 의존성 포함
 
 
   // 닉네임으로 방 참여
@@ -246,14 +313,20 @@ const GameRoom = () => {
         throw new Error('연결에 실패했습니다. 다시 시도해주세요.');
       }
 
+      // 호스트인 경우 먼저 호스트 상태를 설정
+      if (action === 'create') {
+        sync.isHost = true;
+      }
+
+      // 닉네임이 없거나 빈 문자열인 경우 기본값 설정
+      const playerName = nickname && nickname.trim() ? nickname.trim() : (action === 'create' ? '방장' : '플레이어');
+
       const newPlayer = {
-        name: nickname,
+        name: playerName,
         isHost: action === 'create' // 방 만들기인 경우 호스트
       };
       
-      console.log('handleJoinWithNickname - 플레이어 등록 시도:', newPlayer);
       const registeredPlayer = await sync.registerPlayer(newPlayer);
-      console.log('handleJoinWithNickname - 플레이어 등록 성공:', registeredPlayer);
       setCurrentPlayer(registeredPlayer);
       setShowNicknameInput(false);
       setErrorMessage('');
@@ -384,6 +457,7 @@ const GameRoom = () => {
                 onJoin={handleJoinWithNickname}
                 roomCode={roomCode}
                 isHost={action === 'create'}
+                existingPlayers={players}
               />
             </Suspense>
           </motion.div>
@@ -520,18 +594,19 @@ const LegacyRedirect = () => {
 
 // 메인 App 컴포넌트
 function App() {
-  console.log('App 컴포넌트 렌더링');
   
   return (
-    <div className="app">
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/create-room" element={<CreateRoomPage />} />
-        <Route path="/room/:roomCode/:action" element={<GameRoom />} />
-        <Route path="/game/:roomCode" element={<LegacyRedirect />} />
-        <Route path="*" element={<HomePage />} />
-      </Routes>
-    </div>
+    <GameProvider>
+      <div className="app">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/create-room" element={<CreateRoomPage />} />
+          <Route path="/room/:roomCode/:action" element={<GameRoom />} />
+          <Route path="/game/:roomCode" element={<LegacyRedirect />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+      </div>
+    </GameProvider>
   );
 }
 

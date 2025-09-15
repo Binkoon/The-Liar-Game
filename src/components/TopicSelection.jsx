@@ -7,21 +7,28 @@ import '../styles/TopicSelection.css';
 const TopicSelection = ({ onTopicSelected, onBackToLobby, currentPlayer }) => {
   const [selectedTopic, setSelectedTopic] = useState('');
 
+
   const handleTopicSelect = (topic) => {
     // 방장만 주제를 선택할 수 있음
-    if (!currentPlayer?.isHost) return;
+    if (!currentPlayer?.isHost) {
+      return;
+    }
     setSelectedTopic(topic);
   };
 
   const handleConfirm = () => {
     // 방장만 주제 선택을 완료할 수 있음
-    if (!currentPlayer?.isHost || !selectedTopic) return;
+    if (!currentPlayer?.isHost || !selectedTopic) {
+      return;
+    }
     onTopicSelected(selectedTopic);
   };
 
   const handleRandom = () => {
     // 방장만 랜덤 선택을 할 수 있음
-    if (!currentPlayer?.isHost) return;
+    if (!currentPlayer?.isHost) {
+      return;
+    }
     const topics = Object.keys(GAME_TOPICS);
     const randomTopic = topics[Math.floor(Math.random() * topics.length)];
     onTopicSelected(randomTopic);

@@ -17,8 +17,8 @@ export default defineConfig({
           router: ['react-router-dom'],
           // Framer Motion을 별도 청크로 분리 (크기가 큼)
           framer: ['framer-motion'],
-          // Zustand 상태 관리
-          store: ['zustand'],
+          // Valtio 상태 관리
+          store: ['valtio'],
           // 게임 컴포넌트들을 청크로 분리
           'game-phases': [
             './src/components/TopicSelection.jsx',

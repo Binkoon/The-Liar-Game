@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGameStore } from '../stores/gameStore';
+import { useGame, useCurrentPlayer, useCurrentSpeaker, useVoteResult } from '../contexts/GameContext';
 import LazyGamePhase from './LazyGamePhase';
 import Chat from './Chat';
 import PageTransition from './PageTransition';
@@ -10,8 +10,9 @@ import '../styles/Game.css';
 import '../styles/LoadingSpinner.css';
 
 const Game = ({ players, onBackToLobby, currentPlayer }) => {
+  // Context에서 상태와 액션 가져오기
   const {
-    gameState,
+    gameState: gameStateData,
     currentPlayerId,
     currentSpeaker,
     gamePhase,
@@ -24,37 +25,19 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     isChatVisible,
     error,
     isLoading,
-    clearError,
-    initializeGame,
-    selectTopic,
-    confirmRole,
-    completeRoleAssignment,
-    nextSpeaker,
-    vote,
-    startFinalSpeech,
-    startWithdrawal,
-    withdrawVote,
-    calculateResult,
-    calculateVoteResult,
-    checkLiarAnswer,
-    addExplanation,
-    toggleExplanationLog,
-    toggleWordAnnouncement,
-    addChatMessage,
-    toggleChat,
-    getCurrentPlayer,
-    getCurrentSpeaker,
-    isExplanationLogDisabled,
-    resetGame,
-    setGamePhase,
-    updateGameStateFromSync
-  } = useGameStore();
+    actions
+  } = useGame();
+  
+  // 편의 훅들
+  const currentPlayerFromContext = useCurrentPlayer();
+  const currentSpeakerFromContext = useCurrentSpeaker();
+  const voteResult = useVoteResult();
 
   useEffect(() => {
     // 참여자(playing 상태)만 게임에 포함
     const playingPlayers = players.filter(p => p.status === 'playing');
-    initializeGame(playingPlayers);
-  }, [players, initializeGame]);
+    actions.initializeGame(playingPlayers);
+  }, [players, actions]);
 
   // 플레이어 수가 변경될 때 게임 상태 동기화
   useEffect(() => {
@@ -64,12 +47,12 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
         // 플레이어가 충분하면 게임 상태를 동기화
         window.realtimeSync.getGameState().then(gameState => {
           if (gameState && gameState.gamePhase !== 'topic_selection') {
-            updateGameStateFromSync(gameState);
+            actions.updateGameStateFromSync(gameState);
           }
         });
       }
     }
-  }, [players, gamePhase, updateGameStateFromSync]);
+  }, [players, gamePhase, actions]);
 
   // 실시간 동기화 리스너 등록
   useEffect(() => {
@@ -77,7 +60,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
       const handleGameStateUpdate = (event, data) => {
         if (event === 'gameStateUpdated') {
           // 게임 상태가 업데이트되면 store에 반영
-          updateGameStateFromSync(data);
+          actions.updateGameStateFromSync(data);
         }
       };
 
@@ -91,7 +74,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
         }
       };
     }
-  }, [updateGameStateFromSync]);
+  }, [actions]);
 
   const getCurrentPhase = () => {
     if (gamePhase === 'topic_selection') {
@@ -103,77 +86,100 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     return gamePhase;
   };
 
-  const getPhaseProps = (phase) => {
-    const currentPlayer = getCurrentPlayer();
-    
+  // 메모이제이션된 phase props
+  const getPhaseProps = useCallback((phase) => {
     const baseProps = {
-      gameState,
+      gameState: gameStateData,
       currentPlayerId,
-      currentPlayer
+      currentPlayer: currentPlayerFromContext
     };
 
     switch (phase) {
       case 'topic_selection':
         return {
           ...baseProps,
-          onTopicSelected: selectTopic,
+          onTopicSelected: actions.selectTopic,
           onBackToLobby
         };
       case 'role_confirmation':
         return {
           ...baseProps,
-          onComplete: completeRoleAssignment,
-          onConfirmRole: confirmRole,
+          onComplete: actions.completeRoleAssignment,
+          onConfirmRole: actions.confirmRole,
         };
       case 'explanation':
         return {
           ...baseProps,
-          currentPlayer: getCurrentPlayer(),
-          currentSpeaker: currentSpeaker,
-          onNextSpeaker: nextSpeaker,
-          onAddExplanation: addExplanation,
-          onStartVoting: () => setGamePhase('voting')
+          currentPlayer: currentPlayerFromContext,
+          currentSpeaker: currentSpeakerFromContext,
+          onNextSpeaker: actions.nextSpeaker,
+          onAddExplanation: actions.addExplanation,
+          onStartVoting: () => actions.setGamePhase('voting')
         };
       case 'voting':
         return {
           ...baseProps,
-          currentPlayer: getCurrentPlayer(),
-          onVote: vote,
-          onStartFinalSpeech: startFinalSpeech
+          currentPlayer: currentPlayerFromContext,
+          onVote: actions.vote,
+          onStartFinalSpeech: actions.startFinalSpeech
+        };
+      case 'revote':
+        return {
+          ...baseProps,
+          currentPlayer: currentPlayerFromContext,
+          onVote: actions.vote,
+          onStartFinalSpeech: actions.startFinalSpeech
         };
       case 'final_speech':
         return {
           ...baseProps,
-          currentPlayer: getCurrentPlayer(),
+          currentPlayer: currentPlayerFromContext,
           suspectedPlayer: suspectedPlayer,
-          onStartWithdrawal: startWithdrawal,
-          onCalculateResult: calculateResult,
-          onLiarAnswer: checkLiarAnswer,
-          calculateVoteResult: calculateVoteResult
+          onStartWithdrawal: actions.startWithdrawal,
+          onCalculateResult: actions.calculateResult,
+          onLiarAnswer: actions.checkLiarAnswer,
+          calculateVoteResult: voteResult
         };
       case 'withdrawal':
         return {
           ...baseProps,
-          onWithdrawVote: withdrawVote,
-          onCalculateResult: calculateResult,
-          calculateVoteResult: calculateVoteResult
+          currentPlayerId,
+          onWithdrawVote: actions.withdrawVote,
+          onCalculateResult: actions.calculateResult,
+          calculateVoteResult: voteResult
         };
       case 'result':
         return {
           ...baseProps,
           onBackToLobby,
           onNewGame: () => {
-            resetGame();
-            initializeGame(players);
+            actions.resetGame();
+            actions.initializeGame(players);
           },
-          calculateVoteResult: calculateVoteResult
+          calculateVoteResult: voteResult
         };
       default:
         return baseProps;
     }
-  };
+  }, [
+    gameStateData, 
+    currentPlayerId, 
+    currentPlayerFromContext, 
+    currentSpeakerFromContext,
+    suspectedPlayer,
+    voteResult,
+    actions,
+    onBackToLobby,
+    players
+  ]);
 
   const currentPhase = getCurrentPhase();
+  
+  // 메모이제이션된 phase props
+  const phaseProps = useMemo(() => 
+    getPhaseProps(currentPhase), 
+    [getPhaseProps, currentPhase]
+  );
 
   // 관전자 모드 확인
   const isSpectator = currentPlayer && currentPlayer.status === 'spectating';
@@ -191,7 +197,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
           <h2>❌ 오류가 발생했습니다</h2>
           <p>{error}</p>
           <button 
-            onClick={clearError}
+            onClick={actions.clearError}
             className="error-retry-btn"
           >
             다시 시도
@@ -222,17 +228,18 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
 
         <Chat
           messages={chatMessages}
-          onSendMessage={addChatMessage}
-          currentPlayer={getCurrentPlayer()}
+          onSendMessage={actions.addChatMessage}
+          currentPlayer={currentPlayerFromContext}
           isVisible={isChatVisible}
-          onToggleVisibility={toggleChat}
+          onToggleVisibility={actions.toggleChat}
           disabled={true} // 관전자는 채팅도 제한
           explanations={explanations}
-          onAddExplanation={addExplanation}
-          currentSpeaker={getCurrentSpeaker()}
-          allPlayers={gameState?.players || []}
+          onAddExplanation={actions.addExplanation}
+          currentSpeaker={currentSpeakerFromContext}
+          allPlayers={gameStateData?.players || []}
           onAddExplanationAsPlayer={() => {}} // 관전자는 설명 추가 불가
           spectatorMode={true}
+          gamePhase={gamePhase}
         />
       </div>
     );
@@ -255,7 +262,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
     );
   }
 
-  if (!gameState || !gameState.players || gameState.players.length === 0) {
+  if (!gameStateData || !gameStateData.players || gameStateData.players.length === 0) {
     return (
       <motion.div 
         className="game-loading"
@@ -265,7 +272,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
       >
         <h2>게임을 준비하는 중...</h2>
         <p>플레이어: {players.length}명</p>
-        <p>게임 상태: {gameState ? '초기화됨' : '초기화 안됨'}</p>
+        <p>게임 상태: {gameStateData ? '초기화됨' : '초기화 안됨'}</p>
       </motion.div>
     );
   }
@@ -286,27 +293,27 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
       </motion.div>
 
       {/* 제시어 공지 - 라이어가 아닌 플레이어에게만 표시 */}
-      {gameState && gameState.topic && gamePhase === 'explanation' && showWordAnnouncement && (
+      {gameStateData && gameStateData.topic && gamePhase === 'explanation' && showWordAnnouncement && (
         <div className="word-announcement">
           <div className="word-announcement-content">
             <div className="word-announcement-header">
               <h2>🎯 제시어</h2>
               <button 
                 className="word-announcement-close"
-                onClick={toggleWordAnnouncement}
+                onClick={actions.toggleWordAnnouncement}
               >
                 ✕
               </button>
             </div>
             <div className="word-announcement-topic">
               <span className="topic-label">주제:</span>
-              <span className="topic-value">{gameState.topic}</span>
+              <span className="topic-value">{gameStateData.topic}</span>
             </div>
-            {getCurrentPlayer()?.role !== 'liar' ? (
+            {currentPlayerFromContext?.role !== 'liar' ? (
               <>
                 <div className="word-announcement-word">
                   <span className="word-label">단어:</span>
-                  <span className="word-value">{gameState.word}</span>
+                  <span className="word-value">{gameStateData.word}</span>
                 </div>
                 <div className="word-announcement-note">
                   <p>💡 라이어는 단어를 모르므로 유추해서 설명하세요!</p>
@@ -325,7 +332,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
       {gamePhase === 'suspicion_announcement' && (
         <SuspicionAnnouncement
           suspectedPlayer={suspectedPlayer}
-          onStartFinalSpeech={startFinalSpeech}
+          onStartFinalSpeech={actions.startFinalSpeech}
         />
       )}
 
@@ -336,7 +343,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
           onCompleteSpeech={(speechText) => {
             // 최후발언 완료 처리 (필요시 설명 로그에 추가)
           }}
-          onStartWithdrawal={startWithdrawal}
+          onStartWithdrawal={actions.startWithdrawal}
         />
       )}
 
@@ -344,7 +351,7 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
         <PageTransition transitionKey={currentPhase}>
           <LazyGamePhase
             phase={currentPhase}
-            {...getPhaseProps(currentPhase)}
+            {...phaseProps}
           />
         </PageTransition>
       </div>
@@ -353,21 +360,23 @@ const Game = ({ players, onBackToLobby, currentPlayer }) => {
       <div className="game-bottom-section">
         <Chat
           messages={chatMessages}
-          onSendMessage={addChatMessage}
-          currentPlayer={getCurrentPlayer()}
+          onSendMessage={actions.addChatMessage}
+          currentPlayer={currentPlayerFromContext}
           isVisible={isChatVisible}
-          onToggleVisibility={toggleChat}
+          onToggleVisibility={actions.toggleChat}
           disabled={gamePhase === 'topic_selection' || gamePhase === 'role_confirmation' || gamePhase === 'result'}
           explanations={explanations}
-          onAddExplanation={addExplanation}
-          currentSpeaker={getCurrentSpeaker()}
-          allPlayers={gameState?.players || []}
+          onAddExplanation={actions.addExplanation}
+          currentSpeaker={currentSpeakerFromContext}
+          allPlayers={gameStateData?.players || []}
           onAddExplanationAsPlayer={(playerId, explanationText) => {
-            const player = gameState?.players.find(p => p.id === playerId);
+            const player = gameStateData?.players.find(p => p.id === playerId);
             if (player) {
-              addExplanation(explanationText, player.name);
+              actions.addExplanation(explanationText, player.name);
             }
           }}
+          gamePhase={gamePhase}
+          spectatorMode={false}
         />
       </div>
     </div>

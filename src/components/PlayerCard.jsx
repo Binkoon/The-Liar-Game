@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Card from './Card';
 import '../styles/PlayerCard.css';
 
@@ -89,4 +89,4 @@ const PlayerCard = ({
   );
 };
 
-export default PlayerCard;
+export default memo(PlayerCard);

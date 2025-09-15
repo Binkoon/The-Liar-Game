@@ -18,7 +18,7 @@
 
 .spectator-toggle-btn {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #dee2e6;
@@ -28,6 +28,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  z-index: 10;
 }
 
 .spectator-toggle-btn:hover {
@@ -127,6 +128,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
+  padding-right: 60px; /* 관전 버튼을 위한 여백 */
+  word-break: break-word;
 }
 
 .host-badge {

@@ -4,7 +4,7 @@
 
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7.1.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand-5.0.8-FF6B6B?style=for-the-badge&logo=zustand&logoColor=white)
+![Valtio](https://img.shields.io/badge/Valtio-1.12.1-FF6B6B?style=for-the-badge&logo=valtio&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer%20Motion-12.23.12-FF0055?style=for-the-badge&logo=framer&logoColor=white)
 ![React Router](https://img.shields.io/badge/React%20Router-7.9.1-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Realtime%20DB-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)

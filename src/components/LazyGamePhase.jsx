@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, memo } from 'react';
 import { motion } from 'framer-motion';
 
 // 게임 단계별 컴포넌트들을 lazy loading으로 import
@@ -6,6 +6,7 @@ const TopicSelection = lazy(() => import('./TopicSelection'));
 const RoleAssignment = lazy(() => import('./RoleAssignment'));
 const ExplanationPhase = lazy(() => import('./ExplanationPhase'));
 const VotingPhase = lazy(() => import('./VotingPhase'));
+const RevotePhase = lazy(() => import('./RevotePhase'));
 const WithdrawalPhase = lazy(() => import('./WithdrawalPhase'));
 const GameResult = lazy(() => import('./GameResult'));
 
@@ -49,6 +50,12 @@ const LazyGamePhase = ({ phase, spectatorMode = false, ...props }) => {
             <VotingPhase {...props} spectatorMode={spectatorMode} />
           </Suspense>
         );
+      case 'revote':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <RevotePhase {...props} spectatorMode={spectatorMode} />
+          </Suspense>
+        );
       case 'withdrawal':
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -73,4 +80,4 @@ const LazyGamePhase = ({ phase, spectatorMode = false, ...props }) => {
   return renderPhase();
 };
 
-export default LazyGamePhase;
+export default memo(LazyGamePhase);

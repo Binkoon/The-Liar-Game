@@ -1,0 +1,294 @@
+<mxfile host="app.diagrams.net" modified="2025-01-27T00:00:00.000Z" agent="5.0" etag="abc123" version="24.7.17" type="device">
+  <diagram name="라이어게임 시스템 아키텍처 (Valtio + Context API)" id="system-architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 제목 -->
+        <mxCell id="title" value="라이어게임 시스템 아키텍처 &amp; 데이터 플로우 (Valtio + Context API)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- 사용자 인터페이스 레이어 -->
+        <mxCell id="ui-layer" value="사용자 인터페이스 레이어 (Context API + 메모이제이션)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="1070" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- React 컴포넌트들 -->
+        <mxCell id="homepage" value="HomePage&#xa;(자동 리다이렉트)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="create-room" value="CreateRoomPage&#xa;(방 생성)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="220" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="nickname-input" value="NicknameInput&#xa;(닉네임 입력)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="360" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game-room" value="GameRoom&#xa;(메인 게임 컨테이너)&#xa;useGame()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="500" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lobby" value="Lobby&#xa;(로비)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="640" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game" value="Game&#xa;(게임 진행)&#xa;useGame() + memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="780" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game-phases" value="게임 단계별 컴포넌트&#xa;LazyGamePhase&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Context API 레이어 -->
+        <mxCell id="context-layer" value="Context API 레이어 (Props Drilling 해결)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="240" width="1070" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game-context" value="GameContext&#xa;(Context Provider)&#xa;├── useGame()&#xa;├── useCurrentPlayer()&#xa;├── useCurrentSpeaker()&#xa;└── useVoteResult()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- 상태 관리 레이어 -->
+        <mxCell id="state-layer" value="상태 관리 레이어 (Valtio + Firebase 동기화)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="440" width="1070" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="valtio-store" value="Valtio GameStore&#xa;(프록시 기반 상태)&#xa;├── gameState (proxy)&#xa;├── actions (함수들)&#xa;└── useSnapshot()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="valtio-firebase-sync" value="valtioFirebaseSync&#xa;(양방향 동기화)&#xa;├── Firebase → Valtio&#xa;├── Valtio → Firebase&#xa;└── subscribe() 자동 동기화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="280" y="500" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="firebase-sync" value="FirebaseRealtimeSync&#xa;(기존 동기화)&#xa;├── 플레이어 관리&#xa;├── 방 관리&#xa;└── 이벤트 리스너" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="480" y="500" width="150" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- 데이터베이스 레이어 -->
+        <mxCell id="db-layer" value="데이터베이스 레이어" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="640" width="1070" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="firebase-db" value="Firebase Realtime Database&#xa;(실시간 데이터 저장)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="80" y="700" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="room-structure" value="방 구조&#xa;rooms/{roomCode}/&#xa;├── players/&#xa;├── gameState/&#xa;└── createdAt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="300" y="700" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 유틸리티 레이어 -->
+        <mxCell id="util-layer" value="유틸리티 레이어" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="820" width="1070" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="room-manager" value="roomManager&#xa;(방 코드 생성)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="80" y="880" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game-data" value="gameData&#xa;(주제/단어 데이터)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="220" y="880" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="game-utils" value="gameUtils&#xa;(게임 로직)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="360" y="880" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 데이터 플로우 화살표들 -->
+        <!-- 홈페이지 -> 방 생성 -->
+        <mxCell id="flow1" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="homepage" target="create-room">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="210" y="170" as="sourcePoint" />
+            <mxPoint x="220" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 방 생성 -> 닉네임 입력 -->
+        <mxCell id="flow2" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="create-room" target="nickname-input">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350" y="170" as="sourcePoint" />
+            <mxPoint x="360" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 닉네임 입력 -> 게임방 -->
+        <mxCell id="flow3" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="nickname-input" target="game-room">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="490" y="170" as="sourcePoint" />
+            <mxPoint x="500" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 게임방 -> 로비/게임 -->
+        <mxCell id="flow4" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="game-room" target="lobby">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="630" y="170" as="sourcePoint" />
+            <mxPoint x="640" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="flow5" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="lobby" target="game">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="770" y="170" as="sourcePoint" />
+            <mxPoint x="780" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="flow6" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="game" target="game-phases">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="910" y="170" as="sourcePoint" />
+            <mxPoint x="920" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Context API 연결 -->
+        <mxCell id="context-flow1" value="Context Provider" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="game-room" target="game-context">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="560" y="210" as="sourcePoint" />
+            <mxPoint x="180" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="context-flow2" value="useGame()" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="game" target="game-context">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="840" y="210" as="sourcePoint" />
+            <mxPoint x="180" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Valtio 연결 -->
+        <mxCell id="valtio-flow1" value="useSnapshot()" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="game-context" target="valtio-store">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="180" y="410" as="sourcePoint" />
+            <mxPoint x="170" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Valtio-Firebase 동기화 -->
+        <mxCell id="sync-flow1" value="양방향 동기화" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="valtio-store" target="valtio-firebase-sync">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="550" as="sourcePoint" />
+            <mxPoint x="280" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="sync-flow2" value="Firebase 연결" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="valtio-firebase-sync" target="firebase-sync">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="470" y="550" as="sourcePoint" />
+            <mxPoint x="480" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Firebase 연결 -->
+        <mxCell id="db-flow1" value="데이터 저장/조회" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="firebase-sync" target="firebase-db">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="555" y="610" as="sourcePoint" />
+            <mxPoint x="180" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 게임 단계별 컴포넌트 상세 -->
+        <mxCell id="phase-detail" value="게임 단계별 컴포넌트 상세 (메모이제이션 적용)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="220" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="topic-selection" value="TopicSelection&#xa;(주제 선택)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="260" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role-assignment" value="RoleAssignment&#xa;(역할 배정)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="260" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="explanation" value="ExplanationPhase&#xa;(설명 단계)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="310" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="voting" value="VotingPhase&#xa;(투표)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="310" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="revote" value="RevotePhase&#xa;(재투표)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="360" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="withdrawal" value="WithdrawalPhase&#xa;(철회)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="360" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="result" value="GameResult&#xa;(결과)&#xa;memo()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="920" y="410" width="90" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- 데이터 플로우 상세 -->
+        <mxCell id="data-flow-title" value="개선된 데이터 플로우" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="970" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- 플로우 1: 방 생성 -->
+        <mxCell id="flow1-detail" value="1. 방 생성 플로우 (개선됨)&#xa;HomePage → CreateRoomPage → NicknameInput → GameRoom&#xa;├── generateRoomCode()&#xa;├── 닉네임 검증 (2-6글자, 중복 체크)&#xa;├── FirebaseRealtimeSync 초기화&#xa;└── Valtio 동기화 설정" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1010" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 플로우 2: 게임 시작 -->
+        <mxCell id="flow2-detail" value="2. 게임 시작 플로우 (Context API)&#xa;Lobby → Game → TopicSelection → RoleAssignment&#xa;├── useGame() 훅으로 상태 접근&#xa;├── 호스트만 주제 선택 가능&#xa;├── 역할 배정 (일반인/라이어/광신도)&#xa;└── Valtio 자동 Firebase 동기화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1010" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 플로우 3: 게임 진행 -->
+        <mxCell id="flow3-detail" value="3. 게임 진행 플로우 (메모이제이션)&#xa;ExplanationPhase → VotingPhase → RevotePhase&#xa;├── React.memo로 리렌더링 최적화&#xa;├── useCallback으로 함수 메모이제이션&#xa;├── useMemo로 계산 최적화&#xa;└── 실시간 양방향 동기화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1010" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 해결된 문제점 표시 -->
+        <mxCell id="solutions-title" value="✅ 해결된 문제점" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#006600;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1110" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="solution1" value="1. 상태 동기화 단순화&#xa;├── Valtio 단일 상태 소스&#xa;├── 자동 양방향 동기화&#xa;└── 실시간 업데이트 충돌 해결" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccffcc;strokeColor=#00aa00;align=left;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1150" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="solution2" value="2. Props Drilling 해결&#xa;├── Context API 도입&#xa;├── useGame() 훅 활용&#xa;└── 컴포넌트 간 의존성 단순화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccffcc;strokeColor=#00aa00;align=left;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1150" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="solution3" value="3. 성능 최적화&#xa;├── React.memo 적용&#xa;├── useCallback/useMemo 활용&#xa;└── 불필요한 리렌더링 방지" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccffcc;strokeColor=#00aa00;align=left;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1150" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="solution4" value="4. 개발자 경험 개선&#xa;├── 직관적인 상태 조작&#xa;├── 타입 안전성 향상&#xa;└── 디버깅 용이성" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccffcc;strokeColor=#00aa00;align=left;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1150" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 아키텍처 개선사항 -->
+        <mxCell id="architecture-title" value="🏗️ 아키텍처 개선사항" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#0066cc;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1230" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arch1" value="1. Valtio 도입&#xa;├── Zustand → Valtio 마이그레이션&#xa;├── 프록시 기반 반응형 상태&#xa;└── 자연스러운 상태 업데이트" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f3ff;strokeColor=#0066cc;align=left;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1270" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arch2" value="2. Context API 통합&#xa;├── GameProvider로 전역 상태 제공&#xa;├── 커스텀 훅으로 로직 분리&#xa;└── Props drilling 완전 해결" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f3ff;strokeColor=#0066cc;align=left;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1270" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arch3" value="3. 메모이제이션 적용&#xa;├── React.memo로 컴포넌트 최적화&#xa;├── useCallback으로 함수 최적화&#xa;└── useMemo로 계산 최적화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f3ff;strokeColor=#0066cc;align=left;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1270" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arch4" value="4. Firebase 동기화 개선&#xa;├── valtioFirebaseSync 도입&#xa;├── 양방향 자동 동기화&#xa;└── 실시간 상태 일관성 보장" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f3ff;strokeColor=#0066cc;align=left;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1270" width="250" height="60" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

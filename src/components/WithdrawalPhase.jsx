@@ -4,14 +4,16 @@ import Button from './Button';
 import PlayerCard from './PlayerCard';
 import '../styles/WithdrawalPhase.css';
 
-const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calculateVoteResult }) => {
-  const [withdrawnPlayers, setWithdrawnPlayers] = useState(new Set());
+const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calculateVoteResult, currentPlayerId }) => {
   const [withdrawalDecisions, setWithdrawalDecisions] = useState({}); // 철회 결정 상태
+  const [allDecisionsMade, setAllDecisionsMade] = useState(false);
 
   const voteResult = calculateVoteResult();
   const mostVotedPlayer = gameState.players.find(p => p.id === voteResult.mostVotedPlayer);
 
   const handleWithdrawDecision = (playerId, decision) => {
+    if (playerId !== currentPlayerId) return; // 현재 플레이어만 결정할 수 있음
+    
     setWithdrawalDecisions(prev => ({
       ...prev,
       [playerId]: decision
@@ -19,13 +21,33 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
     
     if (decision === 'withdraw') {
       onWithdrawVote(playerId);
-      setWithdrawnPlayers(prev => new Set([...prev, playerId]));
     }
   };
 
   const handleFinalize = () => {
+    // 다수결로 철회 여부 결정
+    const decisions = Object.values(withdrawalDecisions);
+    const withdrawCount = decisions.filter(d => d === 'withdraw').length;
+    const keepCount = decisions.filter(d => d === 'keep').length;
+    
+    if (withdrawCount > keepCount) {
+      // 철회가 다수결로 결정됨 - 재투표
+      console.log('철회가 다수결로 결정됨 - 재투표 진행');
+      // 재투표 로직은 gameStore에서 처리
+    } else {
+      // 철회 안함이 다수결로 결정됨 - 최종 결과
+      console.log('철회 안함이 다수결로 결정됨 - 최종 결과');
+    }
+    
     onCalculateResult();
   };
+
+  // 모든 플레이어가 결정했는지 확인
+  React.useEffect(() => {
+    const votingPlayers = gameState.players.filter(p => gameState.votes[p.id]);
+    const decidedPlayers = Object.keys(withdrawalDecisions);
+    setAllDecisionsMade(decidedPlayers.length === votingPlayers.length);
+  }, [withdrawalDecisions, gameState.players, gameState.votes]);
 
   const getVoteCounts = () => {
     const voteCounts = {};
@@ -37,7 +59,8 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
 
   const voteCounts = getVoteCounts();
   const totalVotes = Object.keys(gameState.votes).length;
-  const totalWithdrawals = withdrawnPlayers.size;
+  const totalWithdrawals = Object.values(withdrawalDecisions).filter(d => d === 'withdraw').length;
+  const votingPlayers = gameState.players.filter(p => gameState.votes[p.id]);
 
   return (
     <div className="withdrawal-phase">
@@ -70,26 +93,24 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
           <div className="withdrawal-options">
             <h4>투표 철회 결정</h4>
             <p className="withdrawal-instruction">
-              각 플레이어는 투표를 철회할지 결정해야 합니다. 철회하지 않으면 현재 투표가 유지됩니다.
+              각 플레이어는 투표를 철회할지 결정해야 합니다. 다수결의 원칙에 따라 결정됩니다.
             </p>
             <div className="players-list">
-              {gameState.players.map(player => {
-                const hasVoted = gameState.votes[player.id];
-                const hasWithdrawn = withdrawnPlayers.has(player.id);
+              {votingPlayers.map(player => {
                 const decision = withdrawalDecisions[player.id];
-                const canDecide = hasVoted && !hasWithdrawn;
+                const isCurrentPlayer = player.id === currentPlayerId;
 
                 return (
                   <div key={player.id} className="withdrawal-player">
                     <PlayerCard
                       player={player}
-                      className={`withdrawal-player-card ${hasWithdrawn ? 'withdrawal-player-card--withdrawn' : ''}`}
+                      className={`withdrawal-player-card ${decision ? 'withdrawal-player-card--decided' : ''}`}
                     />
                     <div className="withdrawal-decision">
-                      {!hasVoted ? (
-                        <span className="no-vote">투표 안함</span>
-                      ) : hasWithdrawn ? (
-                        <span className="withdrawn">철회 완료</span>
+                      {!isCurrentPlayer ? (
+                        <span className="waiting">
+                          {decision ? (decision === 'withdraw' ? '철회' : '철회 안함') : '결정 대기 중...'}
+                        </span>
                       ) : (
                         <div className="decision-buttons">
                           <Button
@@ -120,7 +141,8 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
           <div className="withdrawal-status">
             <div className="status-info">
               <p>총 투표: {totalVotes}명</p>
-              <p>철회 완료: {totalWithdrawals}명</p>
+              <p>결정 완료: {Object.keys(withdrawalDecisions).length}명 / {votingPlayers.length}명</p>
+              <p>철회: {totalWithdrawals}명, 철회 안함: {Object.values(withdrawalDecisions).filter(d => d === 'keep').length}명</p>
             </div>
           </div>
 
@@ -129,8 +151,9 @@ const WithdrawalPhase = ({ gameState, onWithdrawVote, onCalculateResult, calcula
               onClick={handleFinalize}
               variant="primary"
               size="large"
+              disabled={!allDecisionsMade}
             >
-              최종 결과 확인
+              {allDecisionsMade ? '최종 결과 확인' : '모든 플레이어의 결정을 기다리는 중...'}
             </Button>
           </div>
         </div>

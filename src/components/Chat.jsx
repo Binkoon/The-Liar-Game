@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Card from './Card';
 import Button from './Button';
@@ -16,7 +16,9 @@ const Chat = ({
   onAddExplanation,
   currentSpeaker,
   allPlayers = [],
-  onAddExplanationAsPlayer
+  onAddExplanationAsPlayer,
+  gamePhase = 'explanation',
+  spectatorMode = false
 }) => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
@@ -30,21 +32,33 @@ const Chat = ({
   //   scrollToBottom();
   // }, [messages]);
 
-  const handleSendMessage = (e) => {
+  // 플레이어가 이미 발언했는지 확인
+  const hasPlayerSpoken = (playerId) => {
+    return explanations.some(exp => exp.playerId === playerId);
+  };
+
+  // 현재 플레이어가 발언할 수 있는지 확인
+  const canPlayerSpeak = () => {
+    if (!currentPlayer || spectatorMode) return false;
+    if (gamePhase !== 'explanation') return false;
+    return !hasPlayerSpoken(currentPlayer.id);
+  };
+
+  const handleSendMessage = useCallback((e) => {
     e.preventDefault();
-    if (newMessage.trim() && !disabled) {
+    if (newMessage.trim() && !disabled && canPlayerSpeak()) {
       onSendMessage(newMessage.trim());
       setNewMessage('');
     }
-  };
+  }, [newMessage, disabled, canPlayerSpeak, onSendMessage]);
 
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
     }
-  };
+  }, [handleSendMessage]);
 
   if (!isVisible) {
     return (
@@ -118,8 +132,16 @@ const Chat = ({
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={disabled ? "채팅이 비활성화되었습니다" : "메시지를 입력하세요..."}
-              disabled={disabled}
+              placeholder={
+                disabled 
+                  ? "채팅이 비활성화되었습니다" 
+                  : !canPlayerSpeak() 
+                    ? "이미 발언하셨습니다" 
+                    : gamePhase === 'explanation'
+                      ? "제시어에 대한 설명을 입력하세요..."
+                      : "메시지를 입력하세요..."
+              }
+              disabled={disabled || !canPlayerSpeak()}
               className="chat-input"
               maxLength={100}
             />
@@ -127,12 +149,17 @@ const Chat = ({
               type="submit"
               variant="primary"
               size="small"
-              disabled={!newMessage.trim() || disabled}
+              disabled={!newMessage.trim() || disabled || !canPlayerSpeak()}
               className="chat-send-btn"
             >
               전송
             </Button>
           </div>
+          {gamePhase === 'explanation' && canPlayerSpeak() && (
+            <div className="speaking-notice">
+              💬 제시어에 대한 설명을 한 번만 할 수 있습니다
+            </div>
+          )}
         </form>
         
         <div className="chat-actions">
@@ -150,4 +177,4 @@ const Chat = ({
   );
 };
 
-export default Chat;
+export default memo(Chat);

@@ -55,18 +55,28 @@ class FirebaseRealtimeSync {
       console.log('기존 플레이어 확인:', snapshot.exists() ? snapshot.val() : '없음');
       
       if (!snapshot.exists() || Object.keys(snapshot.val() || {}).length === 0) {
-        this.isHost = true;
-        console.log('호스트로 설정됨 - isHost:', this.isHost);
+        // 기존 플레이어가 없고, 아직 호스트 상태가 설정되지 않은 경우에만 호스트로 설정
+        if (this.isHost === undefined) {
+          this.isHost = true;
+          console.log('호스트로 설정됨 - isHost:', this.isHost);
+        } else {
+          console.log('이미 호스트 상태가 설정됨 - isHost:', this.isHost);
+        }
         // 방 생성 시 타임스탬프 추가
         await set(ref(database, `rooms/${this.roomCode}/createdAt`), serverTimestamp());
         console.log('방 생성 타임스탬프 추가됨');
       } else {
-        console.log('기존 플레이어가 있어서 게스트로 설정됨 - isHost:', this.isHost);
+        // 기존 플레이어가 있으면 게스트로 설정 (단, 이미 호스트로 설정된 경우는 제외)
+        if (this.isHost === undefined) {
+          this.isHost = false;
+          console.log('기존 플레이어가 있어서 게스트로 설정됨 - isHost:', this.isHost);
+        } else {
+          console.log('호스트 상태가 이미 설정됨 - isHost:', this.isHost);
+        }
       }
 
-      // 현재 플레이어 등록
-      await this.registerPlayer();
-      console.log('플레이어 등록 완료');
+      // init에서는 플레이어 등록하지 않음 (수동으로 등록할 때만)
+      console.log('Firebase 동기화 초기화 완료 - 플레이어 등록은 수동으로');
       
     } catch (error) {
       console.error('Firebase 동기화 초기화 실패:', error);
@@ -90,9 +100,13 @@ class FirebaseRealtimeSync {
       }
     });
 
-    // 방 삭제 감지 (호스트 퇴장 시)
+    // 방 삭제 감지 (호스트 퇴장 시) - 초기화 시에는 감지하지 않음
+    let roomWasCreated = false;
     onValue(this.roomRef, (snapshot) => {
-      if (!snapshot.exists()) {
+      if (snapshot.exists()) {
+        roomWasCreated = true;
+      } else if (roomWasCreated) {
+        // 방이 존재했다가 삭제된 경우에만 감지
         console.log('방이 삭제되었습니다 (호스트 퇴장)');
         this.notifyListeners('roomDeleted', null);
       }
@@ -102,24 +116,47 @@ class FirebaseRealtimeSync {
   // 플레이어 등록
   async registerPlayer(playerData = {}) {
     try {
+      // 먼저 기존 플레이어 확인 (중복 등록 방지)
+      const existingPlayer = await get(this.playerRef);
+      if (existingPlayer.exists()) {
+        console.log('이미 등록된 플레이어입니다. 중복 등록 방지:', existingPlayer.val());
+        return existingPlayer.val();
+      }
+      
+      // playerData에서 isHost가 명시적으로 전달된 경우 우선 사용
+      const isHost = playerData.isHost !== undefined ? playerData.isHost : this.isHost;
+      
+      // 닉네임이 없으면 기본 닉네임 생성
+      let playerName = playerData.name;
+      if (!playerName || playerName.trim() === '') {
+        playerName = isHost ? '방장' : `플레이어_${this.playerId.slice(-4)}`;
+      }
+      
       const player = {
         id: this.playerId,
-        name: playerData.name || 'Unknown Player',
-        isHost: this.isHost,
+        name: playerName,
+        isHost: isHost,
         status: playerData.status || 'playing',
         lastSeen: serverTimestamp(),
         ...playerData
       };
-
+  
       console.log('플레이어 등록 시도:', {
         playerId: this.playerId,
         name: player.name,
-        isHost: this.isHost,
-        playerData: playerData
+        isHost: isHost,
+        playerData: playerData,
+        syncIsHost: this.isHost,
+        originalName: playerData.name,
+        finalName: player.name
       });
-
+  
       await set(this.playerRef, player);
-      console.log('플레이어 등록 성공 - isHost:', this.isHost);
+      console.log('플레이어 등록 성공 - isHost:', isHost);
+      
+      // 등록 후 내부 isHost 상태도 업데이트
+      this.isHost = isHost;
+      
       return player;
     } catch (error) {
       console.error('플레이어 등록 실패:', error);
@@ -260,6 +297,46 @@ class FirebaseRealtimeSync {
     }
   }
 
+  // 중복 플레이어 정리 (같은 playerId를 가진 플레이어들 제거)
+  async cleanupDuplicatePlayers() {
+    try {
+      const snapshot = await get(this.playersRef);
+      if (!snapshot.exists()) return;
+      
+      const players = snapshot.val();
+      const duplicatePlayers = [];
+      
+      // 같은 playerId를 가진 플레이어들 찾기
+      const playerIdCounts = {};
+      Object.values(players).forEach(player => {
+        if (player && player.id) {
+          playerIdCounts[player.id] = (playerIdCounts[player.id] || 0) + 1;
+        }
+      });
+      
+      // 중복된 플레이어들 제거 (가장 최근 것만 남기고)
+      for (const [playerId, count] of Object.entries(playerIdCounts)) {
+        if (count > 1) {
+          const duplicateKeys = Object.keys(players).filter(key => 
+            players[key] && players[key].id === playerId
+          );
+          
+          // 가장 최근 것만 남기고 나머지 제거
+          duplicateKeys.sort((a, b) => 
+            (players[b].lastSeen || 0) - (players[a].lastSeen || 0)
+          );
+          
+          duplicateKeys.slice(1).forEach(key => {
+            remove(ref(database, `rooms/${this.roomCode}/players/${key}`));
+            console.log('중복 플레이어 제거:', key);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('중복 플레이어 정리 실패:', error);
+    }
+  }
+
   // 호스트 퇴장 시 방 즉시 삭제
   async deleteRoom() {
     try {
@@ -279,18 +356,22 @@ class FirebaseRealtimeSync {
     this.playersRef = ref(database, `rooms/${roomCode}/players`);
     this.gameStateRef = ref(database, `rooms/${roomCode}/gameState`);
     this.playerRef = ref(database, `rooms/${roomCode}/players/${this.playerId}`);
-    this.init();
+    // init() 호출 제거 - 수동으로 초기화하도록 변경
+    console.log('방 변경 완료:', roomCode);
   }
 }
 
 // 싱글톤 인스턴스
 let syncInstance = null;
 
-export const initFirebaseRealtimeSync = (roomCode) => {
+export const initFirebaseRealtimeSync = async (roomCode) => {
   if (syncInstance) {
     syncInstance.changeRoom(roomCode);
+    // changeRoom 후에는 init() 호출하지 않음 (이미 초기화됨)
   } else {
     syncInstance = new FirebaseRealtimeSync(roomCode);
+    // 새 인스턴스 생성 시 init() 호출
+    await syncInstance.init();
   }
   return syncInstance;
 };
@@ -305,3 +386,6 @@ export const cleanupFirebaseRealtimeSync = () => {
     syncInstance = null;
   }
 };
+
+// FirebaseRealtimeSync 클래스 export
+export { FirebaseRealtimeSync };

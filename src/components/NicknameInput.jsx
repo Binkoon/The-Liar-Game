@@ -5,25 +5,43 @@ import Input from './Input';
 import Card from './Card';
 import '../styles/NicknameInput.css';
 
-const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true }) => {
+const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true, existingPlayers = [] }) => {
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
+
+  const validateNickname = (nickname) => {
+    const trimmedNickname = nickname.trim();
+    
+    if (!trimmedNickname) {
+      return '닉네임을 입력해주세요.';
+    }
+
+    if (trimmedNickname.length < 2) {
+      return '닉네임은 2글자 이상이어야 합니다.';
+    }
+
+    if (trimmedNickname.length > 6) {
+      return '닉네임은 6글자 이하여야 합니다.';
+    }
+
+    // 중복 검사
+    const isDuplicate = existingPlayers.some(player => 
+      player.name && player.name.toLowerCase() === trimmedNickname.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      return '이미 사용 중인 닉네임입니다.';
+    }
+
+    return null;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!nickname.trim()) {
-      setError('닉네임을 입력해주세요.');
-      return;
-    }
-
-    if (nickname.trim().length < 2) {
-      setError('닉네임은 2글자 이상이어야 합니다.');
-      return;
-    }
-
-    if (nickname.trim().length > 10) {
-      setError('닉네임은 10글자 이하여야 합니다.');
+    const validationError = validateNickname(nickname);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -75,7 +93,7 @@ const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true }
                 onKeyPress={handleKeyPress}
                 placeholder="닉네임을 입력하세요"
                 className="nickname-input"
-                maxLength={10}
+                maxLength={6}
                 autoFocus
               />
               {error && (
@@ -105,6 +123,10 @@ const NicknameInput = ({ onJoin, roomCode, isHost = false, showRoomCode = true }
             <div className="info-item">
               <span className="info-icon">👥</span>
               <span>최소 3명, 최대 10명까지 참여 가능</span>
+            </div>
+            <div className="info-item">
+              <span className="info-icon">📝</span>
+              <span>닉네임은 2~6글자, 중복 불가</span>
             </div>
             <div className="info-item">
               <span className="info-icon">🎮</span>
