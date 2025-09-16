@@ -17,9 +17,26 @@ const ThemeToggle = ({ className = '' }) => {
     <motion.button
       className={`theme-toggle ${theme} ${className}`}
       onClick={toggleTheme}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ 
+        scale: 1.08, 
+        y: -1,
+        transition: { 
+          duration: 0.3, 
+          ease: [0.25, 0.1, 0.25, 1] 
+        }
+      }}
+      whileTap={{ 
+        scale: 0.96,
+        y: 0,
+        transition: { 
+          duration: 0.15, 
+          ease: [0.25, 0.1, 0.25, 1] 
+        }
+      }}
+      transition={{ 
+        duration: 0.3, 
+        ease: [0.25, 0.1, 0.25, 1] 
+      }}
       title={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
       aria-label={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
     >
@@ -30,7 +47,10 @@ const ThemeToggle = ({ className = '' }) => {
             x: theme === 'light' ? 0 : 24,
             backgroundColor: theme === 'light' ? '#ffffff' : '#f9ab00'
           }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          transition={{ 
+            duration: 0.5, 
+            ease: [0.25, 0.1, 0.25, 1] 
+          }}
         >
           <span className="toggle-icon">
             {theme === 'light' ? '☀️' : '🌙'}
