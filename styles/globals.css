@@ -9,29 +9,34 @@
 
 /* ===== CSS CUSTOM PROPERTIES ===== */
 :root {
-  /* Gmail 스타일 비즈니스 컬러 시스템 */
-  --color-primary-50: #f8f9fa;
-  --color-primary-100: #e8eaed;
-  --color-primary-200: #dadce0;
-  --color-primary-300: #bdc1c6;
-  --color-primary-400: #9aa0a6;
-  --color-primary-500: #5f6368;
-  --color-primary-600: #3c4043;
-  --color-primary-700: #202124;
-  --color-primary-800: #171717;
-  --color-primary-900: #0f0f0f;
+  /* 게임 테마 컬러 시스템 - 화려하고 게임다운 색상 */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
 
-  /* Gmail 블루 액센트 */
-  --color-accent-50: #e3f2fd;
-  --color-accent-100: #bbdefb;
-  --color-accent-200: #90caf9;
-  --color-accent-300: #64b5f6;
-  --color-accent-400: #42a5f5;
-  --color-accent-500: #1a73e8;
-  --color-accent-600: #1557b0;
-  --color-accent-700: #0d47a1;
-  --color-accent-800: #0a3d91;
-  --color-accent-900: #083d91;
+  /* 게임 액센트 컬러 - 보라색 그라데이션 */
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+  --color-accent-700: #7c3aed;
+  --color-accent-800: #6b21a8;
+  --color-accent-900: #581c87;
+
+  /* 게임 특별 컬러 - 네온 그린 */
+  --color-game-neon: #00ff88;
+  --color-game-gold: #ffd700;
+  --color-game-orange: #ff6b35;
 
   --color-gray-50: #f8fafc;
   --color-gray-100: #f1f5f9;
@@ -44,21 +49,21 @@
   --color-gray-800: #1e293b;
   --color-gray-900: #0f172a;
 
-  /* 비즈니스 상태 색상 */
-  --color-success-50: #e8f5e8;
-  --color-success-100: #c8e6c9;
-  --color-success-500: #34a853;
-  --color-success-600: #137333;
+  /* 게임 상태 색상 - 더 생동감 있는 색상 */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
   
-  --color-warning-50: #fef7e0;
-  --color-warning-100: #fef0c7;
-  --color-warning-500: #f9ab00;
-  --color-warning-600: #ea8600;
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
   
-  --color-error-50: #fce8e6;
-  --color-error-100: #fad2cf;
-  --color-error-500: #ea4335;
-  --color-error-600: #d93025;
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
 
   /* 정보 색상 */
   --color-info-50: #e3f2fd;
@@ -66,24 +71,24 @@
   --color-info-500: #1a73e8;
   --color-info-600: #1557b0;
 
-  /* 기본 배경 및 텍스트 색상 (라이트 모드) */
+  /* 게임 테마 배경 및 텍스트 색상 (라이트 모드) */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #e8eaed;
-  --text-primary: #202124;
-  --text-secondary: #5f6368;
-  --text-tertiary: #9aa0a6;
-  --border-color: #dadce0;
+  --bg-secondary: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  --bg-tertiary: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+  --text-primary: #0c4a6e;
+  --text-secondary: #0369a1;
+  --text-tertiary: #0284c7;
+  --border-color: #bae6fd;
 
-  /* 다크모드 색상 */
+  /* 게임 테마 다크모드 색상 */
   .theme-dark {
-    --bg-primary: #202124;
-    --bg-secondary: #171717;
-    --bg-tertiary: #2d2e30;
-    --text-primary: #e8eaed;
-    --text-secondary: #bdc1c6;
-    --text-tertiary: #9aa0a6;
-    --border-color: #3c4043;
+    --bg-primary: #0c4a6e;
+    --bg-secondary: linear-gradient(135deg, #075985 0%, #0369a1 100%);
+    --bg-tertiary: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+    --text-primary: #f0f9ff;
+    --text-secondary: #bae6fd;
+    --text-tertiary: #7dd3fc;
+    --border-color: #0369a1;
   }
 
   /* Typography */
@@ -175,19 +180,49 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Gmail 스타일 비즈니스 배경 */
+/* 게임 테마 배경 - 화려한 그라데이션 */
 .theme-light body {
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--color-primary-50) 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #bae6fd 50%, #7dd3fc 75%, #38bdf8 100%);
+  background-attachment: fixed;
 }
 
 .theme-dark body {
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--color-primary-900) 100%);
+  background: linear-gradient(135deg, #0c4a6e 0%, #075985 25%, #0369a1 50%, #0284c7 75%, #0ea5e9 100%);
+  background-attachment: fixed;
+}
+
+/* 게임 테마 장식 요소 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-loading {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 /* ===== TYPOGRAPHY ===== */
