@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" version="28.2.1">
+  <diagram name="개선된 아키텍처 (제안)" id="enhanced-architecture">
+    <mxGraphModel dx="1426" dy="777" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="개선된 아키텍처 (제안)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="20" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="client1" value="클라이언트 1&#xa;(호스트)&#xa;&#xa;✅ UI만 담당" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="100" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="client2" value="클라이언트 2&#xa;(플레이어)&#xa;&#xa;✅ UI만 담당" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="220" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="client3" value="클라이언트 3&#xa;(플레이어)&#xa;&#xa;✅ UI만 담당" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="340" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="nextjs" value="Next.js 서버&#xa;(API Routes)&#xa;&#xa;✅ 방 생성&#xa;✅ 호스트 결정&#xa;✅ 역할 배정&#xa;✅ 투표 처리&#xa;✅ 게임 로직" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="200" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="socketio" value="Socket.io&#xa;실시간 통신&#xa;&#xa;✅ 서버 중심&#xa;✅ 브로드캐스트&#xa;✅ 안전한 통신" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="360" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" value="Azure Cache&#xa;for Redis&#xa;(메인 DB)&#xa;&#xa;✅ 게임 상태 저장&#xa;✅ 방 정보 저장&#xa;✅ 플레이어 데이터&#xa;✅ TTL 자동 정리" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="700" y="200" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zustand" value="Zustand&#xa;상태관리&#xa;&#xa;✅ UI 상태만&#xa;✅ 서버 데이터 동기화" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="480" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="advantages" value="개선된 점:&#xa;&#xa;• 서버 중심 아키텍처&#xa;• 보안 강화 (서버 검증)&#xa;• 일관성 보장&#xa;• 확장성 향상&#xa;• 실시간 통신 최적화&#xa;• 비용 효율적 ($8/월)&#xa;&#xa;→ 안전하고 안정적인 게임" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccffcc;strokeColor=#66cc66;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="700" y="400" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" value="Socket.io&#xa;연결" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="client1" target="socketio" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" value="Socket.io&#xa;연결" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="client2" target="socketio" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" value="Socket.io&#xa;연결" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="client3" target="socketio" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" value="API 호출" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;strokeWidth=2;" parent="1" source="socketio" target="nextjs" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" value="데이터 저장/조회" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;strokeWidth=2;" parent="1" source="nextjs" target="redis" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" value="상태 관리" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="zustand" target="client1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge7" value="상태 관리" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="zustand" target="client2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge8" value="상태 관리" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;strokeWidth=2;" parent="1" source="zustand" target="client3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow1" value="✅" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" parent="1" vertex="1">
+          <mxGeometry x="300" y="140" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow2" value="✅" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" parent="1" vertex="1">
+          <mxGeometry x="300" y="260" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow3" value="✅" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" parent="1" vertex="1">
+          <mxGeometry x="300" y="380" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="flow1" value="1. 클라이언트 요청" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="140" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow2" value="2. 서버 처리" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="500" y="140" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow3" value="3. Redis 저장" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="620" y="140" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow4" value="4. 모든 클라이언트에 브로드캐스트" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="220" y="320" width="180" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
