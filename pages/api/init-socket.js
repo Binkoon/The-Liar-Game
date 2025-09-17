@@ -9,33 +9,71 @@ import {
 } from '../../data/game-types'
 import { assignRoles } from '../../data/game-rules'
 import { getRandomKeyword } from '../../data/keywords'
+import { 
+  validatePlayerName, 
+  validateRoomCode, 
+  validateSessionId, 
+  validateSocketId,
+  validateSpeechContent,
+  validateVoteData,
+  validateRateLimit,
+  sanitizeInput
+} from '../../utils/validation'
+import { 
+  handleError, 
+  GameError, 
+  ERROR_TYPES, 
+  ERROR_MESSAGES,
+  logError 
+} from '../../utils/error-handler'
+import { 
+  RateLimiter, 
+  sanitizeInput as secureSanitizeInput,
+  validateSession,
+  logSecurityEvent,
+  securityMiddleware
+} from '../../utils/security'
+
+// Rate Limiter 인스턴스 생성
+const rateLimiter = new RateLimiter(require('../../lib/redis').default)
 
 // Socket.io 서버 초기화
 const SocketHandler = (req, res) => {
-  // 이미 초기화된 경우
-  if (res.socket.server.io) {
-    res.end()
-    return
-  }
+  // 임시로 보안 미들웨어 비활성화 (배포 테스트용)
+  // securityMiddleware(req, res, () => {
+    // 이미 초기화된 경우
+    if (res.socket.server.io) {
+      res.end()
+      return
+    }
 
-        // Socket.io 서버 생성
-        const io = new SocketServer(res.socket.server, {
-          cors: {
-            origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:3000'],
-            methods: ['GET', 'POST']
-          },
-          pingInterval: 25000,
-          pingTimeout: 60000,
-        })
+    // Socket.io 서버 생성
+    const io = new SocketServer(res.socket.server, {
+      cors: {
+        origin: process.env.NODE_ENV === 'production' 
+          ? [process.env.NEXT_PUBLIC_APP_URL || 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app'] 
+          : ['http://localhost:3000'],
+        methods: ['GET', 'POST']
+      },
+      pingInterval: 25000,
+      pingTimeout: 60000,
+    })
 
-  // Socket 연결 이벤트 리스너
-  io.on('connection', (socket) => {
-    console.log('새로운 클라이언트 연결:', socket.id)
+    // Socket 연결 이벤트 리스너
+    io.on('connection', (socket) => {
+      // 클라이언트 정보 로깅
+      const clientInfo = {
+        socketId: socket.id,
+        ip: socket.handshake.address,
+        userAgent: socket.handshake.headers['user-agent'],
+        timestamp: new Date().toISOString()
+      }
+      
+      logSecurityEvent('client_connected', clientInfo, 'low')
 
     // 연결 해제 처리
     socket.on('disconnect', async () => {
       const { roomId } = socket.data
-      console.log('클라이언트 연결 해제:', socket.id)
 
       if (roomId) {
         try {
@@ -74,74 +112,118 @@ const SocketHandler = (req, res) => {
 
     // 방 입장 처리
     socket.on(SOCKET_EVENTS.JOIN_ROOM, async (data) => {
-      const { roomId, playerName, sessionId } = data
-      
-      console.log(`플레이어 ${playerName}이 방 ${roomId}에 입장 시도`)
-
       try {
-        let room = await getRoom(roomId)
+        // Rate limiting 검사 (Redis 기반)
+        const clientIP = socket.handshake.address
+        const rateLimitResult = await rateLimiter.checkLimit(
+          `join_room_${clientIP}`, 
+          5, 
+          60000 // 1분에 5회 제한
+        )
+        
+        if (!rateLimitResult.allowed) {
+          logSecurityEvent('rate_limit_exceeded', { 
+            ip: clientIP, 
+            action: 'join_room' 
+          }, 'medium')
+          throw new GameError(
+            ERROR_TYPES.VALIDATION,
+            '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
+            'medium'
+          )
+        }
+
+        // 세션 보안 검증
+        const sessionValidation = validateSession(
+          data.sessionId,
+          clientIP,
+          socket.handshake.headers['user-agent']
+        )
+        
+        if (!sessionValidation.valid) {
+          logSecurityEvent('invalid_session', { 
+            sessionId: data.sessionId,
+            ip: clientIP,
+            reason: sessionValidation.reason 
+          }, 'high')
+          throw new GameError(
+            ERROR_TYPES.AUTHENTICATION,
+            '유효하지 않은 세션입니다.',
+            'high'
+          )
+        }
+
+        // 입력 데이터 검증 및 sanitization
+        const validatedData = {
+          roomId: validateRoomCode(data.roomId),
+          playerName: validatePlayerName(secureSanitizeInput(data.playerName)),
+          sessionId: validateSessionId(data.sessionId)
+        }
+
+        // 플레이어 방 입장 처리
+
+        let room = await getRoom(validatedData.roomId)
         
         // 방이 없으면 생성
         if (!room) {
-          room = createRoom(roomId)
+          room = createRoom(validatedData.roomId)
           await setRoom(room)
         }
 
-        // 플레이어 이름 검증
-        const trimmedName = playerName.trim()
-        if (trimmedName.length === 0) {
-          socket.emit(SOCKET_EVENTS.ERROR, '이름을 입력해주세요.')
-          return
-        }
-
         // 중복 이름 검사
-        const existingPlayer = room.players.find(p => p.name === trimmedName)
+        const existingPlayer = room.players.find(p => p.name === validatedData.playerName)
         if (existingPlayer) {
-          socket.emit(SOCKET_EVENTS.ERROR, '이미 사용 중인 이름입니다.')
-          return
+          throw new GameError(
+            ERROR_TYPES.VALIDATION,
+            '이미 사용 중인 이름입니다.',
+            'medium'
+          )
         }
 
         // 최대 플레이어 수 검사
         if (room.players.length >= GAME_CONFIG.MAX_PLAYERS) {
-          socket.emit(SOCKET_EVENTS.ERROR, '방이 가득 찼습니다.')
-          return
+          throw new GameError(
+            ERROR_TYPES.GAME_LOGIC,
+            ERROR_MESSAGES[ERROR_TYPES.GAME_LOGIC].ROOM_FULL,
+            'medium'
+          )
         }
 
         // 첫 번째 플레이어는 호스트
         const isHost = room.players.length === 0
 
         // 플레이어 생성 및 추가
-        const player = createPlayer(socket.id, sessionId, trimmedName, isHost)
+        const player = createPlayer(socket.id, validatedData.sessionId, validatedData.playerName, isHost)
         room.players.push(player)
         room.lastUpdatedAt = Date.now()
 
         // 방 입장
-        socket.join(`liarGame:room:${roomId}`)
-        socket.data.roomId = roomId
-        socket.data.playerName = trimmedName
-        socket.data.sessionId = sessionId
+        socket.join(`liarGame:room:${validatedData.roomId}`)
+        socket.data.roomId = validatedData.roomId
+        socket.data.playerName = validatedData.playerName
+        socket.data.sessionId = validatedData.sessionId
 
         // Redis에 저장
         await setRoom(room)
 
         // 입장 성공 응답
         socket.emit(SOCKET_EVENTS.JOIN_ROOM_SUCCESS, {
-          roomId,
-          playerName: trimmedName,
-          sessionId,
+          roomId: validatedData.roomId,
+          playerName: validatedData.playerName,
+          sessionId: validatedData.sessionId,
           isHost,
           currentPhase: room.phase
         })
 
         // 다른 플레이어들에게 새 플레이어 입장 알림
-        socket.to(`liarGame:room:${roomId}`).emit(SOCKET_EVENTS.PLAYER_JOINED, {
-          playerName: trimmedName,
-          sessionId,
+        socket.to(`liarGame:room:${validatedData.roomId}`).emit(SOCKET_EVENTS.PLAYER_JOINED, {
+          playerName: validatedData.playerName,
+          sessionId: validatedData.sessionId,
           isHost
         })
 
         // 플레이어 목록 업데이트
-        io.to(`liarGame:room:${roomId}`).emit(SOCKET_EVENTS.UPDATE_PLAYERS, 
+        io.to(`liarGame:room:${validatedData.roomId}`).emit(SOCKET_EVENTS.UPDATE_PLAYERS, 
           room.players.map(player => ({
             id: player.socketId,
             name: player.name,
@@ -149,11 +231,24 @@ const SocketHandler = (req, res) => {
           }))
         )
 
-        console.log(`플레이어 ${trimmedName}이 방 ${roomId}에 성공적으로 입장`)
+        // 플레이어 입장 완료
 
       } catch (error) {
-        console.error('방 입장 처리 오류:', error)
-        socket.emit(SOCKET_EVENTS.ERROR, '방 입장 중 오류가 발생했습니다.')
+        const gameError = handleError(error, { 
+          action: 'join_room', 
+          socketId: socket.id,
+          data: data 
+        })
+        
+        // 보안 이벤트 로깅
+        logSecurityEvent('join_room_error', {
+          socketId: socket.id,
+          error: gameError.message,
+          ip: socket.handshake.address
+        }, gameError.severity)
+        
+        console.error('방 입장 처리 오류:', gameError)
+        socket.emit(SOCKET_EVENTS.ERROR, gameError.message)
       }
     })
 
@@ -180,7 +275,7 @@ const SocketHandler = (req, res) => {
           return
         }
 
-        console.log(`방 ${roomId}의 게임 단계 변경: ${room.phase} -> ${getNextPhase(room.phase)}`)
+        // 게임 단계 변경 처리
 
         // 단계별 처리
         if (room.phase === GAME_PHASES.WAITING) {
@@ -332,7 +427,7 @@ const SocketHandler = (req, res) => {
                 targetPlayerId: targetPlayerId
               })
 
-              console.log(`플레이어 ${sessionId}가 ${targetPlayer.name}에게 투표`)
+              // 투표 처리 완료
 
               // 모든 플레이어가 투표했는지 확인
               const activePlayers = room.players.filter(p => !p.isDead)
@@ -386,7 +481,7 @@ const SocketHandler = (req, res) => {
                 content: content
               })
 
-              console.log(`${player.name}의 설명: ${content}`)
+              // 설명 처리 완료
 
               // 모든 플레이어가 설명했는지 확인
               const activePlayers = room.players.filter(p => !p.isDead)
@@ -429,9 +524,10 @@ const SocketHandler = (req, res) => {
           })
   })
 
-  // 서버에 Socket.io 인스턴스 저장
-  res.socket.server.io = io
-  res.end()
+    // 서버에 Socket.io 인스턴스 저장
+    res.socket.server.io = io
+    res.end()
+  // })
 }
 
 // 다음 단계 계산

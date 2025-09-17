@@ -54,7 +54,6 @@ export default function JoinRoom() {
       })
 
     } catch (error) {
-      console.error('방 참가 오류:', error)
       setError('방 참가 중 오류가 발생했습니다.')
     } finally {
       setIsJoining(false)

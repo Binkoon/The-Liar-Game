@@ -18,7 +18,7 @@ export default function AdminPanel() {
       const data = await response.json()
       setRooms(data.rooms || [])
     } catch (error) {
-      console.error('방 목록 조회 오류:', error)
+      // 방 목록 조회 오류
     }
   }
 
@@ -30,7 +30,7 @@ export default function AdminPanel() {
       setRoomDetails(data.room)
       setSelectedRoom(roomId)
     } catch (error) {
-      console.error('방 상세 정보 조회 오류:', error)
+      // 방 상세 정보 조회 오류
     }
   }
 
@@ -54,7 +54,7 @@ export default function AdminPanel() {
         setTestPlayerName('테스트플레이어' + Math.floor(Math.random() * 100))
       }
     } catch (error) {
-      console.error('테스트 플레이어 추가 오류:', error)
+      // 테스트 플레이어 추가 오류
     }
   }
 
@@ -77,7 +77,7 @@ export default function AdminPanel() {
         fetchRoomDetails(selectedRoom)
       }
     } catch (error) {
-      console.error('게임 단계 변경 오류:', error)
+      // 게임 단계 변경 오류
     }
   }
 
@@ -99,7 +99,7 @@ export default function AdminPanel() {
         fetchRoomDetails(selectedRoom)
       }
     } catch (error) {
-      console.error('게임 재시작 오류:', error)
+      // 게임 재시작 오류
     }
   }
 
@@ -122,7 +122,7 @@ export default function AdminPanel() {
         setNewRoomId('')
       }
     } catch (error) {
-      console.error('테스트 방 생성 오류:', error)
+      // 테스트 방 생성 오류
     }
   }
 
@@ -263,7 +263,7 @@ export default function AdminPanel() {
               <div className="card-content">
                 <div className="game-link">
                   <Input
-                    value={`http://localhost:3000/room/${selectedRoom}`}
+                    value={`${process.env.NEXT_PUBLIC_APP_URL || 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app'}/room/${selectedRoom}`}
                     readOnly
                     className="link-input"
                   />

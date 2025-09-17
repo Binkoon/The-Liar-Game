@@ -8,6 +8,17 @@ import Input from '../../components/ui/Input'
 import PlayerCard from '../../components/game/PlayerCard'
 import socketClient from '../../utils/socket-client'
 import { SOCKET_EVENTS, GAME_PHASES } from '../../data/game-types'
+import { 
+  validatePlayerName, 
+  validateRoomCode, 
+  validateSessionId,
+  validateSpeechContent 
+} from '../../utils/validation'
+import { 
+  handleError, 
+  getUserFriendlyMessage,
+  ERROR_TYPES 
+} from '../../utils/error-handler'
 
 export default function GameRoom() {
   const router = useRouter()
@@ -31,43 +42,78 @@ export default function GameRoom() {
   const [voteResults, setVoteResults] = useState(null)
   const [votingStatus, setVotingStatus] = useState({}) // 투표 상태 추적
   const [roundInfo, setRoundInfo] = useState(null) // 라운드 정보
+  
+  // 연결 상태 관리
+  const [isReconnecting, setIsReconnecting] = useState(false)
+  const [reconnectAttempts, setReconnectAttempts] = useState(0)
+  const [connectionError, setConnectionError] = useState('')
 
   // 컴포넌트 마운트 시 Socket 연결
   useEffect(() => {
     if (!roomId) return
 
-    // URL에서 플레이어 정보 가져오기
+    // URL에서 플레이어 정보 가져오기 및 검증
     const { playerName: urlPlayerName, sessionId: urlSessionId, isHost: urlIsHost } = router.query
     
-    if (!urlPlayerName || !urlSessionId) {
-      router.push('/')
+    try {
+      if (!urlPlayerName || !urlSessionId) {
+        throw new Error('플레이어 정보가 없습니다.')
+      }
+
+      // 입력 검증
+      const validatedPlayerName = validatePlayerName(urlPlayerName)
+      const validatedSessionId = validateSessionId(urlSessionId)
+      const validatedRoomId = validateRoomCode(roomId)
+
+      setPlayerName(validatedPlayerName)
+      setSessionId(validatedSessionId)
+      setIsHost(urlIsHost === 'true')
+    } catch (error) {
+      const gameError = handleError(error, { action: 'validate_player_data' })
+      setError(getUserFriendlyMessage(gameError))
+      setTimeout(() => router.push('/'), 3000)
       return
     }
-
-    setPlayerName(urlPlayerName)
-    setSessionId(urlSessionId)
-    setIsHost(urlIsHost === 'true')
 
     // Socket 연결
     const socket = socketClient.connect()
 
     // Socket 이벤트 리스너 등록
     socket.on('connect', () => {
-      console.log('Socket 연결됨')
       setIsConnected(true)
+      setConnectionError('')
+      setIsReconnecting(false)
+      setReconnectAttempts(0)
       
       // 방 입장
-      socketClient.joinRoom(roomId, urlPlayerName, urlSessionId)
+      try {
+        socketClient.joinRoom(roomId, playerName, sessionId)
+      } catch (error) {
+        const gameError = handleError(error, { action: 'join_room_on_connect' })
+        setError(getUserFriendlyMessage(gameError))
+      }
     })
 
-    socket.on('disconnect', () => {
-      console.log('Socket 연결 해제됨')
+    socket.on('disconnect', (reason) => {
       setIsConnected(false)
+      
+      // 의도적인 연결 해제가 아닌 경우
+      if (reason !== 'io client disconnect') {
+        setIsReconnecting(true)
+        setConnectionError('연결이 끊어졌습니다. 재연결을 시도합니다...')
+      }
     })
+
+    // 재연결 상태 모니터링
+    const checkReconnectionStatus = () => {
+      setIsReconnecting(socketClient.isReconnecting())
+      setReconnectAttempts(socketClient.getReconnectAttempts())
+    }
+
+    const statusInterval = setInterval(checkReconnectionStatus, 1000)
 
     // 게임 이벤트 리스너
     socket.on(SOCKET_EVENTS.JOIN_ROOM_SUCCESS, (data) => {
-      console.log('방 입장 성공:', data)
       setCurrentPhase(data.currentPhase)
       // 게임이 진행 중이면 playing으로 설정
       if (data.currentPhase === GAME_PHASES.PLAYING) {
@@ -80,12 +126,10 @@ export default function GameRoom() {
     })
 
     socket.on(SOCKET_EVENTS.UPDATE_PLAYERS, (playerList) => {
-      console.log('플레이어 목록 업데이트:', playerList)
       setPlayers(playerList)
     })
 
     socket.on(SOCKET_EVENTS.PHASE_CHANGED, (phase) => {
-      console.log('게임 단계 변경:', phase)
       setCurrentPhase(phase)
       // 게임 단계에 따라 gameStep 설정
       if (phase === GAME_PHASES.PLAYING) {
@@ -98,29 +142,25 @@ export default function GameRoom() {
     })
 
     socket.on(SOCKET_EVENTS.ANSWER_IF_IM_LIAR, (data) => {
-      console.log('라이어 확인 응답:', data)
       setIsLiar(data.isLiar)
       setSubject(data.subject)
       setKeyword(data.keyword)
     })
 
     socket.on(SOCKET_EVENTS.LIAR_REVEALED, (data) => {
-      console.log('라이어 공개:', data)
       setSubject(data.subject)
       setKeyword(data.keyword)
     })
 
     socket.on(SOCKET_EVENTS.SPEECH_MADE, (data) => {
-      console.log('설명 완료:', data)
+      // 설명 완료 처리
     })
 
     socket.on(SOCKET_EVENTS.VOTING_STARTED, () => {
-      console.log('투표 시작')
       setGameStep('voting')
     })
 
     socket.on(SOCKET_EVENTS.VOTE_RESULT, (data) => {
-      console.log('투표 결과:', data)
       setVoteResults(data)
       // 게임이 끝난 경우에만 gameResult 설정
       if (data.isLiarEliminated || data.gameEnded) {
@@ -130,13 +170,11 @@ export default function GameRoom() {
     })
 
     socket.on(SOCKET_EVENTS.GAME_ENDED, (data) => {
-      console.log('게임 종료:', data)
       setGameResult(data)
       setGameStep('ended')
     })
 
     socket.on(SOCKET_EVENTS.ROUND_STARTED, (data) => {
-      console.log('새 라운드 시작:', data)
       setGameStep('playing')
       setVotedPlayer(null)
       setVoteResults(null)
@@ -146,7 +184,6 @@ export default function GameRoom() {
     })
 
     socket.on(SOCKET_EVENTS.VOTE_CASTED, (data) => {
-      console.log('투표 완료:', data)
       // 투표 상태 업데이트
       setVotingStatus(prev => ({
         ...prev,
@@ -155,12 +192,18 @@ export default function GameRoom() {
     })
 
     socket.on(SOCKET_EVENTS.ERROR, (errorMessage) => {
-      console.error('Socket 오류:', errorMessage)
-      setError(errorMessage)
+      setError(getUserFriendlyMessage({ message: errorMessage }))
+    })
+
+    // 재연결 실패 이벤트
+    socket.on('reconnection_failed', (error) => {
+      setConnectionError('재연결에 실패했습니다. 페이지를 새로고침해주세요.')
+      setIsReconnecting(false)
     })
 
     // 컴포넌트 언마운트 시 정리
     return () => {
+      clearInterval(statusInterval)
       socketClient.disconnect()
     }
   }, [roomId, router])
@@ -182,12 +225,15 @@ export default function GameRoom() {
 
   // 설명하기
   const handleSpeak = () => {
-    if (!speechContent.trim()) {
-      setError('설명을 입력해주세요.')
-      return
+    try {
+      const validatedContent = validateSpeechContent(speechContent)
+      socketClient.speak(validatedContent)
+      setSpeechContent('')
+      setError('')
+    } catch (error) {
+      const gameError = handleError(error, { action: 'speak' })
+      setError(getUserFriendlyMessage(gameError))
     }
-    socketClient.speak(speechContent)
-    setSpeechContent('')
   }
 
   // 투표하기
@@ -215,14 +261,12 @@ export default function GameRoom() {
       const data = await response.json()
 
       if (data.success) {
-        console.log('봇 플레이어 추가 성공:', data.message)
         // Socket을 통해 플레이어 목록 업데이트 요청
         socketClient.emit('requestPlayerUpdate')
       } else {
         setError(data.error || '봇 플레이어 추가에 실패했습니다.')
       }
     } catch (error) {
-      console.error('봇 플레이어 추가 오류:', error)
       setError('봇 플레이어 추가 중 오류가 발생했습니다.')
     }
   }
@@ -231,6 +275,17 @@ export default function GameRoom() {
   const handleLeaveRoom = () => {
     socketClient.disconnect()
     router.push('/')
+  }
+
+  // 수동 재연결
+  const handleManualReconnect = () => {
+    try {
+      socketClient.manualReconnect()
+      setConnectionError('')
+    } catch (error) {
+      const gameError = handleError(error, { action: 'manual_reconnect' })
+      setError(getUserFriendlyMessage(gameError))
+    }
   }
 
   // 에러 표시 컴포넌트
@@ -557,8 +612,31 @@ export default function GameRoom() {
           <div className="room-info">
             <h1>방 코드: {roomId}</h1>
             <div className="connection-status">
-              {isConnected ? '🟢 연결됨' : '🔴 연결 끊김'}
+              {isConnected ? (
+                <span className="status-connected">🟢 연결됨</span>
+              ) : isReconnecting ? (
+                <span className="status-reconnecting">
+                  🟡 재연결 중... ({reconnectAttempts}/5)
+                </span>
+              ) : (
+                <span className="status-disconnected">🔴 연결 끊김</span>
+              )}
             </div>
+            {connectionError && (
+              <div className="connection-error">
+                {connectionError}
+                {!isReconnecting && (
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    onClick={handleManualReconnect}
+                    className="reconnect-btn"
+                  >
+                    재연결 시도
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           <div className="room-actions">
             <Button
@@ -652,6 +730,39 @@ export default function GameRoom() {
           font-size: var(--font-size-sm);
           color: var(--color-gray-600);
           margin-top: var(--space-1);
+        }
+
+        .status-connected {
+          color: var(--color-success-600);
+          font-weight: 500;
+        }
+
+        .status-reconnecting {
+          color: var(--color-warning-600);
+          font-weight: 500;
+        }
+
+        .status-disconnected {
+          color: var(--color-error-600);
+          font-weight: 500;
+        }
+
+        .connection-error {
+          background: var(--color-error-50);
+          color: var(--color-error-700);
+          padding: var(--space-2) var(--space-3);
+          border-radius: var(--radius-md);
+          margin-top: var(--space-2);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: var(--font-size-sm);
+        }
+
+        .reconnect-btn {
+          margin-left: var(--space-2);
+          font-size: var(--font-size-xs);
+          padding: var(--space-1) var(--space-2);
         }
 
         .error-message {

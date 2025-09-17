@@ -19,6 +19,14 @@ const nextConfig = {
   // 압축
   compress: true,
   
+  // Vercel 최적화
+  output: 'standalone',
+  
+  // 환경 변수 설정
+  env: {
+    VERCEL_URL: process.env.VERCEL_URL,
+  },
+  
   // 보안 헤더
   async headers() {
     return [
@@ -36,6 +44,10 @@ const nextConfig = {
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
           },
         ],
       },
