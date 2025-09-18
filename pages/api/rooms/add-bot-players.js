@@ -1,4 +1,4 @@
-import { getRoom, setRoom } from '../../../lib/memory-store'
+import { getRoom, setRoom } from '../../../lib/redis'
 import { createPlayer } from '../../../data/game-types'
 
 export default async function handler(req, res) {

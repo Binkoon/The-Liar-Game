@@ -40,21 +40,37 @@ export default function JoinRoom() {
     setError('')
 
     try {
-      // 세션 ID 생성
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      // API를 통한 방 참가 (서버에서 모든 로직 처리)
+      const response = await fetch('/api/rooms/join-room', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomCode: trimmedRoomCode,
+          playerName: trimmedName
+        })
+      })
 
-      // 방 참가 페이지로 이동
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '방 참가에 실패했습니다.')
+      }
+
+      // 서버에서 생성된 데이터로 게임 방으로 이동
       router.push({
-        pathname: `/room/${trimmedRoomCode}`,
+        pathname: `/room/${data.roomId}`,
         query: {
-          playerName: trimmedName,
-          sessionId: sessionId,
-          isHost: false
+          playerName: data.playerName,
+          sessionId: data.sessionId,
+          isHost: data.isHost
         }
       })
 
     } catch (error) {
-      setError('방 참가 중 오류가 발생했습니다.')
+      console.error('방 참가 오류:', error)
+      setError(error.message || '방 참가 중 오류가 발생했습니다.')
     } finally {
       setIsJoining(false)
     }

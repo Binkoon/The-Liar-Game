@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="5.0" etag="abc123" version="22.1.16" type="device">
+  <diagram name="수정된 아키텍처" id="corrected-architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- 클라이언트 레이어 -->
+        <mxCell id="client-layer" value="클라이언트 (Frontend)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1080" height="200" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="create-room" value="pages/create-room.js&#xa;├─ 사용자 입력만 처리 ✅&#xa;├─ API 호출 ✅&#xa;└─ 서버 응답 → UI 업데이트 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="client-layer">
+          <mxGeometry x="20" y="40" width="200" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="join-room" value="pages/join-room.js&#xa;├─ 사용자 입력만 처리 ✅&#xa;├─ API 호출 ✅&#xa;└─ 서버 응답 → UI 업데이트 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="client-layer">
+          <mxGeometry x="240" y="40" width="200" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="game-room" value="pages/room/[roomId].js&#xa;├─ Socket.io 클라이언트 ✅&#xa;├─ 서버 데이터 표시만 ✅&#xa;└─ UI 렌더링 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="client-layer">
+          <mxGeometry x="460" y="40" width="200" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="socket-client" value="utils/socket-client.js&#xa;├─ Socket 연결 관리 ✅&#xa;└─ 이벤트 전송/수신 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="client-layer">
+          <mxGeometry x="680" y="40" width="200" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="zustand" value="stores/gameStore.js&#xa;├─ 클라이언트 상태 관리 ✅&#xa;└─ UI 상태만 관리 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="client-layer">
+          <mxGeometry x="900" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- 서버 레이어 -->
+        <mxCell id="server-layer" value="서버 (Backend)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="1080" height="200" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="socket-server" value="pages/api/init-socket.js&#xa;├─ Socket.io 서버 ✅&#xa;├─ 게임 로직 처리 ✅&#xa;├─ 역할 배정 ✅&#xa;├─ 투표 처리 ✅&#xa;└─ Redis 연동 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="server-layer">
+          <mxGeometry x="20" y="40" width="200" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="create-api" value="pages/api/rooms/create-room.js&#xa;├─ 방 코드 생성 ✅&#xa;├─ 세션 ID 생성 ✅&#xa;├─ 방 생성 로직 ✅&#xa;└─ Redis 저장 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="server-layer">
+          <mxGeometry x="240" y="40" width="200" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="join-api" value="pages/api/rooms/join-room.js&#xa;├─ 방 검증 ✅&#xa;├─ 세션 ID 생성 ✅&#xa;├─ 방 참가 로직 ✅&#xa;└─ Redis 저장 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="server-layer">
+          <mxGeometry x="460" y="40" width="200" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="bot-api" value="pages/api/rooms/add-bot-players.js&#xa;├─ 봇 플레이어 생성 ✅&#xa;├─ 방 상태 업데이트 ✅&#xa;└─ Redis 저장 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="server-layer">
+          <mxGeometry x="680" y="40" width="200" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="game-logic" value="data/game-rules.js&#xa;├─ 역할 배정 로직 ✅&#xa;├─ 게임 규칙 ✅&#xa;└─ 승리 조건 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="server-layer">
+          <mxGeometry x="900" y="40" width="160" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- 데이터베이스 레이어 -->
+        <mxCell id="db-layer" value="Redis Database" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="1080" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="redis-data" value="Redis Cloud&#xa;├─ 방 데이터 저장 ✅&#xa;├─ 플레이어 정보 ✅&#xa;├─ 게임 상태 ✅&#xa;└─ 실시간 동기화 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="db-layer">
+          <mxGeometry x="20" y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="redis-config" value="lib/redis.js&#xa;├─ Redis 연결 관리 ✅&#xa;├─ 데이터 CRUD ✅&#xa;└─ 에러 처리 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="db-layer">
+          <mxGeometry x="240" y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- 연결선 -->
+        <mxCell id="client-to-server" value="HTTP API + Socket.io" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="client-layer" target="server-layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="server-to-db" value="Redis 연결" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="server-layer" target="db-layer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- 역할 분리 표시 -->
+        <mxCell id="role-separation" value="역할 분리 원칙&#xa;✅ 클라이언트: UI + 사용자 입력&#xa;✅ 서버: 비즈니스 로직 + 데이터 처리&#xa;✅ 데이터베이스: 데이터 저장 + 조회" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="680" width="400" height="80" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

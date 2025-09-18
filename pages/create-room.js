@@ -11,15 +11,8 @@ export default function CreateRoom() {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState('')
 
-  // 랜덤 방 코드 생성
-  const generateRoomCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return result
-  }
+  // 클라이언트에서는 방 코드 생성하지 않음
+  // 서버에서 생성된 방 코드를 받아서 사용
 
   const handleCreateRoom = async () => {
     const trimmedName = playerName.trim()
@@ -38,24 +31,36 @@ export default function CreateRoom() {
     setError('')
 
     try {
-      // 방 코드 생성
-      const roomCode = generateRoomCode()
-      
-      // 세션 ID 생성
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      // API를 통한 방 생성
+      const response = await fetch('/api/rooms/create-room', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerName: trimmedName
+        })
+      })
 
-      // 방 생성 페이지로 이동
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '방 생성에 실패했습니다.')
+      }
+
+      // 서버에서 생성된 데이터로 게임 방으로 이동
       router.push({
-        pathname: `/room/${roomCode}`,
+        pathname: `/room/${data.roomId}`,
         query: {
-          playerName: trimmedName,
-          sessionId: sessionId,
-          isHost: true
+          playerName: data.playerName,
+          sessionId: data.sessionId,
+          isHost: data.isHost
         }
       })
 
     } catch (error) {
-      setError('방 생성 중 오류가 발생했습니다.')
+      console.error('방 생성 오류:', error)
+      setError(error.message || '방 생성 중 오류가 발생했습니다.')
     } finally {
       setIsCreating(false)
     }
