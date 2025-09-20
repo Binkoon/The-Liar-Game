@@ -27,7 +27,7 @@ class SocketClient {
 
     try {
       this.socket = io(process.env.NODE_ENV === 'production' 
-        ? 'https://the-liar-game.vercel.app'
+        ? undefined  // 상대 경로 사용 (현재 도메인)
         : 'http://localhost:3000', {
         transports: ['polling', 'websocket'],
         timeout: 10000,
