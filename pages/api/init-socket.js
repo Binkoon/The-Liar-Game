@@ -51,12 +51,15 @@ const SocketHandler = (req, res) => {
     const io = new SocketServer(res.socket.server, {
       cors: {
         origin: process.env.NODE_ENV === 'production' 
-          ? [process.env.NEXT_PUBLIC_APP_URL || 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app'] 
+          ? ['https://the-liar-game.vercel.app', 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app'] 
           : ['http://localhost:3000'],
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST'],
+        credentials: true
       },
+      transports: ['websocket', 'polling'],
       pingInterval: 25000,
       pingTimeout: 60000,
+      allowEIO3: true,
     })
 
     // Socket 연결 이벤트 리스너

@@ -106,7 +106,7 @@ export default function GameRoom() {
 
     // 재연결 상태 모니터링
     const checkReconnectionStatus = () => {
-      setIsReconnecting(socketClient.isReconnecting())
+      setIsReconnecting(socketClient.isReconnecting)
       setReconnectAttempts(socketClient.getReconnectAttempts())
     }
 

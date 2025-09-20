@@ -27,12 +27,16 @@ class SocketClient {
 
     try {
       this.socket = io(process.env.NODE_ENV === 'production' 
-        ? (process.env.NEXT_PUBLIC_APP_URL || 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app')
+        ? 'https://the-liar-game.vercel.app'
         : 'http://localhost:3000', {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         timeout: 10000,
-        reconnection: false, // 수동으로 재연결 관리
-        forceNew: true
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        maxReconnectionAttempts: 5,
+        forceNew: true,
+        withCredentials: true
       })
 
       this.setupEventListeners()
