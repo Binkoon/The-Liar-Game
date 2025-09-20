@@ -89,3 +89,28 @@ export const generateCSRFToken = () => {
 export const verifyCSRFToken = (token, sessionToken) => {
   return token && sessionToken && token === sessionToken
 }
+
+export const validateSpeechContent = (content) => {
+  if (!content || typeof content !== 'string') {
+    return { valid: false, error: '발언 내용이 필요합니다' }
+  }
+  
+  const trimmed = sanitizeInput(content)
+  if (trimmed.length < 1) {
+    return { valid: false, error: '발언 내용은 1글자 이상이어야 합니다' }
+  }
+  
+  if (trimmed.length > 500) {
+    return { valid: false, error: '발언 내용은 500글자 이하여야 합니다' }
+  }
+  
+  // 부적절한 내용 필터링
+  const inappropriateWords = ['욕설', '비속어', '혐오표현'] // 실제로는 더 구체적인 필터링 필요
+  const hasInappropriate = inappropriateWords.some(word => trimmed.includes(word))
+  
+  if (hasInappropriate) {
+    return { valid: false, error: '부적절한 내용이 포함되어 있습니다' }
+  }
+  
+  return { valid: true, value: trimmed }
+}
