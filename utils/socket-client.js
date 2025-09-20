@@ -16,7 +16,7 @@ class SocketClient {
     this.reconnectTimer = null
     this.eventListeners = new Map()
     this.pendingMessages = []
-    this.isReconnecting = false
+    this._isReconnecting = false
   }
 
   // Socket 연결
@@ -55,7 +55,7 @@ class SocketClient {
     this.socket.on('connect', () => {
       this.isConnected = true
       this.reconnectAttempts = 0
-      this.isReconnecting = false
+      this._isReconnecting = false
       
       // 재연결 시 대기 중인 메시지들 전송
       this.flushPendingMessages()
@@ -69,7 +69,7 @@ class SocketClient {
       this.isConnected = false
       
       // 의도적인 연결 해제가 아닌 경우 재연결 시도
-      if (reason !== 'io client disconnect' && !this.isReconnecting) {
+      if (reason !== 'io client disconnect' && !this._isReconnecting) {
         this.scheduleReconnect()
       }
     })
@@ -78,7 +78,7 @@ class SocketClient {
     this.socket.on('connect_error', (error) => {
       this.isConnected = false
       
-      if (!this.isReconnecting) {
+      if (!this._isReconnecting) {
         this.scheduleReconnect()
       }
     })
@@ -90,7 +90,7 @@ class SocketClient {
 
     // 재연결 실패
     this.socket.on('reconnect_failed', () => {
-      this.isReconnecting = false
+      this._isReconnecting = false
       this.emit('reconnection_failed', new GameError(
         ERROR_TYPES.SOCKET,
         ERROR_MESSAGES[ERROR_TYPES.SOCKET].RECONNECTION_FAILED,
@@ -101,11 +101,11 @@ class SocketClient {
 
   // 재연결 스케줄링
   scheduleReconnect() {
-    if (this.isReconnecting || this.reconnectAttempts >= this.maxReconnectAttempts) {
+    if (this._isReconnecting || this.reconnectAttempts >= this.maxReconnectAttempts) {
       return
     }
 
-    this.isReconnecting = true
+    this._isReconnecting = true
     this.reconnectAttempts++
 
     const delay = Math.min(
@@ -167,7 +167,7 @@ class SocketClient {
     }
 
     this.isConnected = false
-    this.isReconnecting = false
+    this._isReconnecting = false
     this.reconnectAttempts = 0
     this.roomId = null
     this.sessionId = null
@@ -288,8 +288,8 @@ class SocketClient {
   }
 
   // 재연결 상태 확인
-  isReconnecting() {
-    return this.isReconnecting
+  get isReconnecting() {
+    return this._isReconnecting
   }
 
   // 재연결 시도 횟수 확인
@@ -299,7 +299,7 @@ class SocketClient {
 
   // 수동 재연결 시도
   manualReconnect() {
-    if (this.isReconnecting) {
+    if (this._isReconnecting) {
       return
     }
 

@@ -50,16 +50,16 @@ const SocketHandler = (req, res) => {
     // Socket.io 서버 생성
     const io = new SocketServer(res.socket.server, {
       cors: {
-        origin: process.env.NODE_ENV === 'production' 
-          ? ['https://the-liar-game.vercel.app', 'https://the-liar-game-o6m5t7xkz-binkoons-projects.vercel.app'] 
-          : ['http://localhost:3000'],
+        origin: "*", // 임시로 모든 origin 허용
         methods: ['GET', 'POST'],
-        credentials: true
+        credentials: false
       },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       pingInterval: 25000,
       pingTimeout: 60000,
       allowEIO3: true,
+      upgrade: true,
+      rememberUpgrade: false
     })
 
     // Socket 연결 이벤트 리스너
